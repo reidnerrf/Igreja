@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 
 interface CatholicCardProps {
@@ -11,7 +11,7 @@ interface CatholicCardProps {
   accentColor?: string;
 }
 
-export default function CatholicCard({
+function CatholicCardComponent({
   title,
   subtitle,
   content,
@@ -54,6 +54,9 @@ export default function CatholicCard({
     </TouchableOpacity>
   );
 }
+
+const CatholicCard = memo(CatholicCardComponent);
+export default CatholicCard;
 
 const styles = StyleSheet.create({
   container: {

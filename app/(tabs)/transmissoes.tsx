@@ -6,7 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  Dimensions
+  Dimensions,
+  FlatList
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -139,13 +140,18 @@ export default function TransmissoesScreen() {
       </View>
 
       {/* Lista de Transmissões */}
-      <ScrollView style={styles.listaContainer} showsVerticalScrollIndicator={false}>
-        <Text style={styles.sectionTitle}>
-          Todas as Transmissões ({transmissoesFiltradas.length})
-        </Text>
-        
-        {transmissoesFiltradas.map((transmissao) => (
-          <TouchableOpacity key={transmissao.id} style={styles.transmissaoCard}>
+      <FlatList
+        style={styles.listaContainer}
+        data={transmissoesFiltradas}
+        keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <Text style={styles.sectionTitle}>
+            Todas as Transmissões ({transmissoesFiltradas.length})
+          </Text>
+        }
+        renderItem={({ item: transmissao }) => (
+          <TouchableOpacity style={styles.transmissaoCard}>
             <Image 
               source={{ uri: transmissao.thumbnail }}
               style={styles.thumbnail}
@@ -186,8 +192,8 @@ export default function TransmissoesScreen() {
               </View>
             </View>
           </TouchableOpacity>
-        ))}
-      </ScrollView>
+        )}
+      />
     </SafeAreaView>
   );
 }

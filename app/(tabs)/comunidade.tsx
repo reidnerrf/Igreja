@@ -7,7 +7,8 @@ import {
   TouchableOpacity,
   TextInput,
   Image,
-  Alert
+  Alert,
+  FlatList
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -182,9 +183,13 @@ export default function ComunidadeScreen() {
       </View>
 
       {/* Lista de Mensagens */}
-      <ScrollView style={styles.mensagensContainer} showsVerticalScrollIndicator={false}>
-        {mensagens.map((mensagem) => (
-          <View key={mensagem.id} style={styles.mensagemCard}>
+      <FlatList
+        style={styles.mensagensContainer}
+        data={mensagens}
+        keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={false}
+        renderItem={({ item: mensagem }) => (
+          <View style={styles.mensagemCard}>
             <View style={styles.mensagemHeader}>
               <View style={styles.autorContainer}>
                 {mensagem.avatar ? (
@@ -230,10 +235,9 @@ export default function ComunidadeScreen() {
               )}
             </View>
           </View>
-        ))}
-        
-        <View style={styles.footerSpace} />
-      </ScrollView>
+        )}
+        ListFooterComponent={<View style={styles.footerSpace} />}
+      />
     </SafeAreaView>
   );
 }
