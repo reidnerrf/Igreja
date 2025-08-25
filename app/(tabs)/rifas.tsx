@@ -21,6 +21,8 @@ import {
   Trophy,
   DollarSign
 } from 'lucide-react-native';
+import { useTheme, tokens } from '@/constants/theme';
+import PressableScale from '@/components/PressableScale';
 
 interface Rifa {
   id: string;
@@ -85,6 +87,7 @@ const statusColors = {
 };
 
 export default function RifasScreen() {
+  const theme = useTheme();
   const [rifas, setRifas] = useState<Rifa[]>(rifasExemplo);
   const [modalVisible, setModalVisible] = useState(false);
   const [novaRifa, setNovaRifa] = useState({
@@ -141,9 +144,9 @@ export default function RifasScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <LinearGradient
-        colors={['#7C3AED', '#A855F7']}
+        colors={[tokens.blue[700], tokens.blue[500]]}
         style={styles.header}
       >
         <View style={styles.headerContent}>
@@ -151,45 +154,45 @@ export default function RifasScreen() {
           <Text style={styles.headerSubtitle}>Ações beneficentes</Text>
         </View>
         
-        <TouchableOpacity
-          style={styles.addButton}
+        <PressableScale
+          style={[styles.addButton, { borderRadius: theme.radius.md }]}
           onPress={() => setModalVisible(true)}
         >
           <Plus size={24} color="#FFFFFF" />
-        </TouchableOpacity>
+        </PressableScale>
       </LinearGradient>
 
       {/* Resumo de Rifas */}
       <View style={styles.resumoContainer}>
-        <View style={styles.resumoCard}>
-          <Gift size={24} color="#7C3AED" />
-          <Text style={styles.resumoNumero}>
+        <View style={[styles.resumoCard, { backgroundColor: theme.colors.surface }]}>
+          <Gift size={24} color={tokens.blue[700]} />
+          <Text style={[styles.resumoNumero, { color: theme.colors.text }]}>
             {rifas.filter(r => r.status === 'ativa').length}
           </Text>
-          <Text style={styles.resumoLabel}>Ativas</Text>
+          <Text style={[styles.resumoLabel, { color: theme.colors.subtleText }]}>Ativas</Text>
         </View>
         
-        <View style={styles.resumoCard}>
+        <View style={[styles.resumoCard, { backgroundColor: theme.colors.surface }]}>
           <Trophy size={24} color="#F59E0B" />
-          <Text style={styles.resumoNumero}>
+          <Text style={[styles.resumoNumero, { color: theme.colors.text }]}>
             {rifas.filter(r => r.status === 'finalizada').length}
           </Text>
-          <Text style={styles.resumoLabel}>Finalizadas</Text>
+          <Text style={[styles.resumoLabel, { color: theme.colors.subtleText }]}>Finalizadas</Text>
         </View>
         
-        <View style={styles.resumoCard}>
-          <DollarSign size={24} color="#059669" />
-          <Text style={styles.resumoNumero}>
+        <View style={[styles.resumoCard, { backgroundColor: theme.colors.surface }]}>
+          <DollarSign size={24} color={tokens.emerald[600]} />
+          <Text style={[styles.resumoNumero, { color: theme.colors.text }]}>
             {rifas.reduce((acc, rifa) => acc + (rifa.vendidos * rifa.valorNumero), 0).toFixed(0)}
           </Text>
-          <Text style={styles.resumoLabel}>Arrecadado</Text>
+          <Text style={[styles.resumoLabel, { color: theme.colors.subtleText }]}>Arrecadado</Text>
         </View>
       </View>
 
       {/* Lista de Rifas */}
       <ScrollView style={styles.rifasContainer} showsVerticalScrollIndicator={false}>
         {rifas.map((rifa) => (
-          <View key={rifa.id} style={styles.rifaCard}>
+          <View key={rifa.id} style={[styles.rifaCard, { backgroundColor: theme.colors.surface }]}>
             <Image source={{ uri: rifa.imagem }} style={styles.rifaImagem} />
             
             <View style={styles.rifaContent}>
@@ -210,32 +213,32 @@ export default function RifasScreen() {
                 </View>
               </View>
               
-              <Text style={styles.rifaTitulo}>{rifa.titulo}</Text>
-              <Text style={styles.rifaDescricao}>{rifa.descricao}</Text>
+              <Text style={[styles.rifaTitulo, { color: theme.colors.text }]}>{rifa.titulo}</Text>
+              <Text style={[styles.rifaDescricao, { color: theme.colors.subtleText }]}>{rifa.descricao}</Text>
               
-              <View style={styles.premioContainer}>
+              <View style={[styles.premioContainer, { backgroundColor: '#FEF3C7' }]}>
                 <Trophy size={16} color="#F59E0B" />
                 <Text style={styles.premioText}>{rifa.premio}</Text>
               </View>
               
               <View style={styles.rifaInfo}>
                 <View style={styles.infoItem}>
-                  <Ticket size={16} color="#6B7280" />
-                  <Text style={styles.infoText}>
+                  <Ticket size={16} color={theme.colors.mutedForeground} />
+                  <Text style={[styles.infoText, { color: theme.colors.mutedForeground }]}>
                     {formatarMoeda(rifa.valorNumero)} / número
                   </Text>
                 </View>
                 
                 <View style={styles.infoItem}>
-                  <Users size={16} color="#6B7280" />
-                  <Text style={styles.infoText}>
+                  <Users size={16} color={theme.colors.mutedForeground} />
+                  <Text style={[styles.infoText, { color: theme.colors.mutedForeground }]}>
                     {rifa.vendidos}/{rifa.totalNumeros}
                   </Text>
                 </View>
                 
                 <View style={styles.infoItem}>
-                  <Clock size={16} color="#6B7280" />
-                  <Text style={styles.infoText}>
+                  <Clock size={16} color={theme.colors.mutedForeground} />
+                  <Text style={[styles.infoText, { color: theme.colors.mutedForeground }]}>
                     até {new Date(rifa.dataFim).toLocaleDateString('pt-BR')}
                   </Text>
                 </View>
@@ -243,24 +246,24 @@ export default function RifasScreen() {
               
               {/* Barra de Progresso */}
               <View style={styles.progressoContainer}>
-                <View style={styles.progressoBar}>
+                <View style={[styles.progressoBar, { backgroundColor: theme.colors.border }]}>
                   <View 
                     style={[
                       styles.progressoFill,
-                      { width: `${calcularProgresso(rifa.vendidos, rifa.totalNumeros)}%` }
+                      { width: `${calcularProgresso(rifa.vendidos, rifa.totalNumeros)}%`, backgroundColor: tokens.blue[700] }
                     ]}
                   />
                 </View>
-                <Text style={styles.progressoText}>
+                <Text style={[styles.progressoText, { color: theme.colors.mutedForeground }]}>
                   {calcularProgresso(rifa.vendidos, rifa.totalNumeros)}% vendido
                 </Text>
               </View>
               
               {rifa.status === 'ativa' && (
-                <TouchableOpacity style={styles.comprarButton}>
+                <PressableScale style={[styles.comprarButton, { backgroundColor: tokens.blue[700] }]}>
                   <Ticket size={16} color="#FFFFFF" />
                   <Text style={styles.comprarText}>Comprar Números</Text>
-                </TouchableOpacity>
+                </PressableScale>
               )}
             </View>
           </View>
@@ -273,83 +276,89 @@ export default function RifasScreen() {
         animationType="slide"
         presentationStyle="pageSheet"
       >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
+          <View style={[styles.modalHeader, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
             <TouchableOpacity onPress={() => setModalVisible(false)}>
-              <Text style={styles.cancelarText}>Cancelar</Text>
+              <Text style={[styles.cancelarText, { color: theme.colors.subtleText }]}>Cancelar</Text>
             </TouchableOpacity>
             
-            <Text style={styles.modalTitle}>Nova Rifa</Text>
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Nova Rifa</Text>
             
             <TouchableOpacity onPress={criarRifa}>
-              <Text style={styles.salvarText}>Criar</Text>
+              <Text style={[styles.salvarText, { color: tokens.blue[700] }]}>Criar</Text>
             </TouchableOpacity>
           </View>
           
           <ScrollView style={styles.modalForm}>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Título da Rifa *</Text>
+              <Text style={[styles.inputLabel, { color: theme.colors.subtleText }]}>Título da Rifa *</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text }]}
                 value={novaRifa.titulo}
                 onChangeText={(text) => setNovaRifa({...novaRifa, titulo: text})}
                 placeholder="Ex: Rifa do Dia das Mães"
+                placeholderTextColor={theme.colors.mutedForeground}
               />
             </View>
             
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Descrição</Text>
+              <Text style={[styles.inputLabel, { color: theme.colors.subtleText }]}>Descrição</Text>
               <TextInput
-                style={[styles.input, styles.textArea]}
+                style={[styles.input, styles.textArea, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text }]}
                 value={novaRifa.descricao}
                 onChangeText={(text) => setNovaRifa({...novaRifa, descricao: text})}
                 placeholder="Descreva o objetivo da rifa..."
+                placeholderTextColor={theme.colors.mutedForeground}
                 multiline
                 numberOfLines={3}
               />
             </View>
             
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Prêmio *</Text>
+              <Text style={[styles.inputLabel, { color: theme.colors.subtleText }]}>Prêmio *</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text }]}
                 value={novaRifa.premio}
                 onChangeText={(text) => setNovaRifa({...novaRifa, premio: text})}
                 placeholder="Ex: Smart TV 55 polegadas"
+                placeholderTextColor={theme.colors.mutedForeground}
               />
             </View>
             
             <View style={styles.inputRow}>
               <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                <Text style={styles.inputLabel}>Valor por Número *</Text>
+                <Text style={[styles.inputLabel, { color: theme.colors.subtleText }]}>Valor por Número *</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text }]}
                   value={novaRifa.valorNumero}
                   onChangeText={(text) => setNovaRifa({...novaRifa, valorNumero: text})}
                   placeholder="10.00"
+                  placeholderTextColor={theme.colors.mutedForeground}
                   keyboardType="numeric"
                 />
               </View>
               
               <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-                <Text style={styles.inputLabel}>Total de Números *</Text>
+                <Text style={[styles.inputLabel, { color: theme.colors.subtleText }]}>Total de Números *</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text }]}
                   value={novaRifa.totalNumeros}
                   onChangeText={(text) => setNovaRifa({...novaRifa, totalNumeros: text})}
                   placeholder="100"
+                  placeholderTextColor={theme.colors.mutedForeground}
                   keyboardType="numeric"
                 />
               </View>
             </View>
             
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Data do Sorteio *</Text>
+              <Text style={[styles.inputLabel, { color: theme.colors.subtleText }]}>Data do Sorteio *</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text }]}
                 value={novaRifa.dataFim}
                 onChangeText={(text) => setNovaRifa({...novaRifa, dataFim: text})}
                 placeholder="YYYY-MM-DD"
+                placeholderTextColor={theme.colors.mutedForeground}
               />
             </View>
           </ScrollView>
