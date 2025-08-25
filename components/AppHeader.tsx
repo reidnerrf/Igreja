@@ -2,6 +2,9 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Bell, User } from 'lucide-react-native';
+import { useTheme, tokens } from '@/constants/theme';
+
+type GradientColors = readonly [string, string, ...string[]];
 
 interface AppHeaderProps {
   title: string;
@@ -16,31 +19,44 @@ export default function AppHeader({
   subtitle, 
   showNotifications = true,
   showProfile = true,
-  backgroundColor = ['#1E40AF', '#3B82F6']
+  backgroundColor,
 }: AppHeaderProps) {
+  const theme = useTheme();
+  const defaultColors = [theme.colors.primary, tokens.blue[500]] as const;
+  const gradientColors: GradientColors = backgroundColor && backgroundColor.length >= 2
+    ? (backgroundColor as unknown as GradientColors)
+    : defaultColors;
+
   return (
     <LinearGradient
-      colors={backgroundColor}
-      style={styles.container}
+      colors={gradientColors}
+      style={[
+        styles.container,
+        { 
+          paddingTop: theme.spacing.lg, 
+          paddingBottom: theme.spacing.lg, 
+          paddingHorizontal: theme.spacing.lg 
+        }
+      ]}
     >
       <View style={styles.content}>
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>{title}</Text>
+          <Text style={[styles.title, { color: theme.colors.primaryContrast }]}>{title}</Text>
           {subtitle && (
-            <Text style={styles.subtitle}>{subtitle}</Text>
+            <Text style={[styles.subtitle, { color: tokens.blue[200] }]}>{subtitle}</Text>
           )}
         </View>
         
         <View style={styles.actionsContainer}>
           {showNotifications && (
-            <TouchableOpacity style={styles.actionButton}>
-              <Bell size={22} color="#FFFFFF" />
+            <TouchableOpacity style={[styles.actionButton, { borderRadius: theme.radius.md }] }>
+              <Bell size={22} color={theme.colors.primaryContrast} />
             </TouchableOpacity>
           )}
           
           {showProfile && (
-            <TouchableOpacity style={styles.actionButton}>
-              <User size={22} color="#FFFFFF" />
+            <TouchableOpacity style={[styles.actionButton, { borderRadius: theme.radius.md }] }>
+              <User size={22} color={theme.colors.primaryContrast} />
             </TouchableOpacity>
           )}
         </View>

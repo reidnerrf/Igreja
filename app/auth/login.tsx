@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import { router } from 'expo-router';
 import { 
   Mail, 
@@ -19,14 +20,17 @@ import {
   EyeOff,
   LogIn
 } from 'lucide-react-native';
+import { useTheme, tokens } from '@/constants/theme';
 
 const { height } = Dimensions.get('window');
 
 export default function LoginScreen() {
+  const theme = useTheme();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [carregando, setCarregando] = useState(false);
+  const [focus, setFocus] = useState<'email' | 'senha' | null>(null);
 
   const fazerLogin = async () => {
     if (!email || !senha) {
@@ -56,7 +60,7 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
-        colors={['#1E40AF', '#3B82F6', '#60A5FA']}
+        colors={[tokens.blue[800], tokens.blue[600], tokens.blue[400]]}
         style={styles.background}
       >
         {/* Cabeçalho */}
@@ -73,47 +77,80 @@ export default function LoginScreen() {
 
         {/* Formulário */}
         <View style={styles.formContainer}>
-          <View style={styles.form}>
-            <Text style={styles.formTitle}>Entrar na sua conta</Text>
+          <BlurView
+            intensity={60}
+            tint={theme.colors.text === '#E2E8F0' ? 'dark' : 'light'}
+            style={[
+              styles.form,
+              {
+                backgroundColor: theme.colors.surfaceElevated + 'CC',
+                borderTopLeftRadius: theme.radius.xl,
+                borderTopRightRadius: theme.radius.xl,
+                padding: theme.spacing.lg,
+                paddingBottom: theme.spacing.xl,
+              }
+            ]}
+          >
+            <Text style={[styles.formTitle, { color: theme.colors.text }]}>Entrar na sua conta</Text>
             
             {/* Campo Email */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Email</Text>
-              <View style={styles.inputContainer}>
-                <Mail size={20} color="#6B7280" style={styles.inputIcon} />
+              <Text style={[styles.inputLabel, { color: theme.colors.subtleText }]}>Email</Text>
+              <View style={[
+                styles.inputContainer,
+                {
+                  backgroundColor: theme.colors.muted,
+                  borderColor: focus === 'email' ? theme.colors.primary : theme.colors.border,
+                  borderRadius: theme.radius.md,
+                  paddingHorizontal: theme.spacing.md,
+                }
+              ]}>
+                <Mail size={20} color={theme.colors.mutedForeground} style={styles.inputIcon} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.colors.text }]}
                   value={email}
                   onChangeText={setEmail}
                   placeholder="seu@email.com"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={theme.colors.mutedForeground}
                   keyboardType="email-address"
                   autoCapitalize="none"
+                  onFocus={() => setFocus('email')}
+                  onBlur={() => setFocus(null)}
                 />
               </View>
             </View>
 
             {/* Campo Senha */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Senha</Text>
-              <View style={styles.inputContainer}>
-                <Lock size={20} color="#6B7280" style={styles.inputIcon} />
+              <Text style={[styles.inputLabel, { color: theme.colors.subtleText }]}>Senha</Text>
+              <View style={[
+                styles.inputContainer,
+                {
+                  backgroundColor: theme.colors.muted,
+                  borderColor: focus === 'senha' ? theme.colors.primary : theme.colors.border,
+                  borderRadius: theme.radius.md,
+                  paddingHorizontal: theme.spacing.md,
+                }
+              ]}>
+                <Lock size={20} color={theme.colors.mutedForeground} style={styles.inputIcon} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.colors.text }]}
                   value={senha}
                   onChangeText={setSenha}
                   placeholder="Sua senha"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={theme.colors.mutedForeground}
                   secureTextEntry={!mostrarSenha}
+                  onFocus={() => setFocus('senha')}
+                  onBlur={() => setFocus(null)}
                 />
                 <TouchableOpacity
                   onPress={() => setMostrarSenha(!mostrarSenha)}
                   style={styles.eyeButton}
                 >
                   {mostrarSenha ? (
-                    <EyeOff size={20} color="#6B7280" />
+                    <EyeOff size={20} color={theme.colors.mutedForeground} />
                   ) : (
-                    <Eye size={20} color="#6B7280" />
+                    <Eye size={20} color={theme.colors.mutedForeground} />
                   )}
                 </TouchableOpacity>
               </View>
@@ -121,45 +158,49 @@ export default function LoginScreen() {
 
             {/* Botão Entrar */}
             <TouchableOpacity
-              style={[styles.loginButton, carregando && styles.loginButtonDisabled]}
+              style={[
+                styles.loginButton,
+                carregando && styles.loginButtonDisabled,
+                { backgroundColor: theme.colors.primary, borderRadius: theme.radius.md }
+              ]}
               onPress={fazerLogin}
               disabled={carregando}
             >
-              <LogIn size={20} color="#FFFFFF" />
-              <Text style={styles.loginButtonText}>
+              <LogIn size={20} color={theme.colors.primaryContrast} />
+              <Text style={[styles.loginButtonText, { color: theme.colors.primaryContrast }]}>
                 {carregando ? 'Entrando...' : 'Entrar'}
               </Text>
             </TouchableOpacity>
 
             {/* Divisor */}
             <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>ou continue com</Text>
-              <View style={styles.dividerLine} />
+              <View style={[styles.dividerLine, { backgroundColor: theme.colors.border }]} />
+              <Text style={[styles.dividerText, { color: theme.colors.subtleText }]}>ou continue com</Text>
+              <View style={[styles.dividerLine, { backgroundColor: theme.colors.border }]} />
             </View>
 
             {/* Botões Sociais */}
             <View style={styles.socialButtons}>
-              <TouchableOpacity style={styles.socialButton} onPress={loginGoogle}>
-                <Text style={styles.socialButtonText}>Google</Text>
+              <TouchableOpacity style={[styles.socialButton, { backgroundColor: theme.colors.muted, borderColor: theme.colors.border }] } onPress={loginGoogle}>
+                <Text style={[styles.socialButtonText, { color: theme.colors.text }]}>Google</Text>
               </TouchableOpacity>
               
-              <TouchableOpacity style={styles.socialButton} onPress={loginApple}>
-                <Text style={styles.socialButtonText}>Apple</Text>
+              <TouchableOpacity style={[styles.socialButton, { backgroundColor: theme.colors.muted, borderColor: theme.colors.border }]} onPress={loginApple}>
+                <Text style={[styles.socialButtonText, { color: theme.colors.text }]}>Apple</Text>
               </TouchableOpacity>
             </View>
 
             {/* Links */}
             <View style={styles.linksContainer}>
               <TouchableOpacity>
-                <Text style={styles.linkText}>Esqueci minha senha</Text>
+                <Text style={[styles.linkText, { color: theme.colors.primary }]}>Esqueci minha senha</Text>
               </TouchableOpacity>
               
               <TouchableOpacity onPress={() => router.push('/auth/register')}>
-                <Text style={styles.linkText}>Cadastrar igreja</Text>
+                <Text style={[styles.linkText, { color: theme.colors.primary }]}>Cadastrar igreja</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </BlurView>
         </View>
       </LinearGradient>
     </SafeAreaView>

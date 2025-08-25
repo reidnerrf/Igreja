@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { useTheme } from '@/constants/theme';
 
 interface CatholicCardProps {
   title: string;
@@ -18,11 +19,18 @@ export default function CatholicCard({
   image,
   onPress,
   actionLabel = 'Ver mais',
-  accentColor = '#1E40AF'
+  accentColor,
 }: CatholicCardProps) {
+  const theme = useTheme();
+  const effectiveAccent = accentColor ?? theme.colors.primary;
+
   return (
     <TouchableOpacity 
-      style={styles.container}
+      style={[
+        styles.container,
+        theme.shadow.md,
+        { backgroundColor: theme.colors.surface, borderRadius: theme.radius.lg }
+      ]}
       onPress={onPress}
       activeOpacity={0.8}
     >
@@ -30,21 +38,21 @@ export default function CatholicCard({
         <Image source={{ uri: image }} style={styles.image} />
       )}
       
-      <View style={styles.content}>
+      <View style={{ padding: theme.spacing.md }}>
         {subtitle && (
-          <Text style={[styles.subtitle, { color: accentColor }]}>
+          <Text style={[styles.subtitle, { color: effectiveAccent }]}>
             {subtitle}
           </Text>
         )}
         
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.description} numberOfLines={3}>
+        <Text style={[styles.title, { color: theme.colors.text }]}>{title}</Text>
+        <Text style={[styles.description, { color: theme.colors.subtleText }]} numberOfLines={3}>
           {content}
         </Text>
         
         {onPress && (
           <TouchableOpacity 
-            style={[styles.actionButton, { backgroundColor: accentColor }]}
+            style={[styles.actionButton, { backgroundColor: effectiveAccent, borderRadius: theme.radius.sm }]}
             onPress={onPress}
           >
             <Text style={styles.actionText}>{actionLabel}</Text>

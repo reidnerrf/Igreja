@@ -21,8 +21,10 @@ import {
   ArrowLeft,
   Check
 } from 'lucide-react-native';
+import { useTheme, tokens } from '@/constants/theme';
 
 export default function RegisterScreen() {
+  const theme = useTheme();
   const [dadosIgreja, setDadosIgreja] = useState({
     nomeParoquia: '',
     enderecoCompleto: '',
@@ -67,13 +69,13 @@ export default function RegisterScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.secondary }]}>
       <LinearGradient
-        colors={['#059669', '#10B981']}
+        colors={[tokens.emerald[600], tokens.emerald[500]]}
         style={styles.header}
       >
         <TouchableOpacity 
-          style={styles.backButton}
+          style={[styles.backButton, { borderRadius: theme.radius.md }]}
           onPress={() => router.back()}
         >
           <ArrowLeft size={24} color="#FFFFFF" />
@@ -88,18 +90,18 @@ export default function RegisterScreen() {
         </View>
       </LinearGradient>
 
-      <ScrollView style={styles.formContainer} showsVerticalScrollIndicator={false}>
-        <View style={styles.form}>
+      <ScrollView style={[styles.formContainer, { backgroundColor: theme.colors.background }]} showsVerticalScrollIndicator={false}>
+        <View style={[styles.form, { backgroundColor: theme.colors.surface, borderTopLeftRadius: theme.radius.xl, borderTopRightRadius: theme.radius.xl }]}>
           {/* Informações da Igreja */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Informações da Igreja</Text>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Informações da Igreja</Text>
             
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Nome da Paróquia/Igreja *</Text>
-              <View style={styles.inputContainer}>
-                <Church size={18} color="#6B7280" style={styles.inputIcon} />
+              <Text style={[styles.inputLabel, { color: theme.colors.subtleText }]}>Nome da Paróquia/Igreja *</Text>
+              <View style={[styles.inputContainer, { backgroundColor: theme.colors.muted, borderColor: theme.colors.border, borderRadius: theme.radius.md }]}>
+                <Church size={18} color={theme.colors.mutedForeground} style={styles.inputIcon} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.colors.text }]}
                   value={dadosIgreja.nomeParoquia}
                   onChangeText={(text) => setDadosIgreja({...dadosIgreja, nomeParoquia: text})}
                   placeholder="Ex: Paróquia São José"
@@ -108,11 +110,11 @@ export default function RegisterScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Endereço Completo</Text>
-              <View style={styles.inputContainer}>
-                <MapPin size={18} color="#6B7280" style={styles.inputIcon} />
+              <Text style={[styles.inputLabel, { color: theme.colors.subtleText }]}>Endereço Completo</Text>
+              <View style={[styles.inputContainer, { backgroundColor: theme.colors.muted, borderColor: theme.colors.border, borderRadius: theme.radius.md }]}>
+                <MapPin size={18} color={theme.colors.mutedForeground} style={styles.inputIcon} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.colors.text }]}
                   value={dadosIgreja.enderecoCompleto}
                   onChangeText={(text) => setDadosIgreja({...dadosIgreja, enderecoCompleto: text})}
                   placeholder="Rua, número, bairro, cidade"
@@ -124,14 +126,14 @@ export default function RegisterScreen() {
 
           {/* Dados do Responsável */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Responsável</Text>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Responsável</Text>
             
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Nome do Responsável *</Text>
-              <View style={styles.inputContainer}>
-                <User size={18} color="#6B7280" style={styles.inputIcon} />
+              <Text style={[styles.inputLabel, { color: theme.colors.subtleText }]}>Nome do Responsável *</Text>
+              <View style={[styles.inputContainer, { backgroundColor: theme.colors.muted, borderColor: theme.colors.border, borderRadius: theme.radius.md }]}>
+                <User size={18} color={theme.colors.mutedForeground} style={styles.inputIcon} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.colors.text }]}
                   value={dadosIgreja.responsavel}
                   onChangeText={(text) => setDadosIgreja({...dadosIgreja, responsavel: text})}
                   placeholder="Ex: Padre João Santos"
@@ -140,11 +142,11 @@ export default function RegisterScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Telefone *</Text>
-              <View style={styles.inputContainer}>
-                <Phone size={18} color="#6B7280" style={styles.inputIcon} />
+              <Text style={[styles.inputLabel, { color: theme.colors.subtleText }]}>Telefone *</Text>
+              <View style={[styles.inputContainer, { backgroundColor: theme.colors.muted, borderColor: theme.colors.border, borderRadius: theme.radius.md }]}>
+                <Phone size={18} color={theme.colors.mutedForeground} style={styles.inputIcon} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.colors.text }]}
                   value={dadosIgreja.telefone}
                   onChangeText={(text) => setDadosIgreja({...dadosIgreja, telefone: text})}
                   placeholder="(11) 99999-9999"
@@ -154,11 +156,11 @@ export default function RegisterScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Email *</Text>
-              <View style={styles.inputContainer}>
-                <Mail size={18} color="#6B7280" style={styles.inputIcon} />
+              <Text style={[styles.inputLabel, { color: theme.colors.subtleText }]}>Email *</Text>
+              <View style={[styles.inputContainer, { backgroundColor: theme.colors.muted, borderColor: theme.colors.border, borderRadius: theme.radius.md }]}>
+                <Mail size={18} color={theme.colors.mutedForeground} style={styles.inputIcon} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.colors.text }]}
                   value={dadosIgreja.email}
                   onChangeText={(text) => setDadosIgreja({...dadosIgreja, email: text})}
                   placeholder="contato@igreja.com"
@@ -171,14 +173,14 @@ export default function RegisterScreen() {
 
           {/* Segurança */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Segurança</Text>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Segurança</Text>
             
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Senha *</Text>
-              <View style={styles.inputContainer}>
-                <Lock size={18} color="#6B7280" style={styles.inputIcon} />
+              <Text style={[styles.inputLabel, { color: theme.colors.subtleText }]}>Senha *</Text>
+              <View style={[styles.inputContainer, { backgroundColor: theme.colors.muted, borderColor: theme.colors.border, borderRadius: theme.radius.md }]}>
+                <Lock size={18} color={theme.colors.mutedForeground} style={styles.inputIcon} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.colors.text }]}
                   value={dadosIgreja.senha}
                   onChangeText={(text) => setDadosIgreja({...dadosIgreja, senha: text})}
                   placeholder="Mínimo 6 caracteres"
@@ -188,11 +190,11 @@ export default function RegisterScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Confirmar Senha *</Text>
-              <View style={styles.inputContainer}>
-                <Lock size={18} color="#6B7280" style={styles.inputIcon} />
+              <Text style={[styles.inputLabel, { color: theme.colors.subtleText }]}>Confirmar Senha *</Text>
+              <View style={[styles.inputContainer, { backgroundColor: theme.colors.muted, borderColor: theme.colors.border, borderRadius: theme.radius.md }]}>
+                <Lock size={18} color={theme.colors.mutedForeground} style={styles.inputIcon} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.colors.text }]}
                   value={dadosIgreja.confirmarSenha}
                   onChangeText={(text) => setDadosIgreja({...dadosIgreja, confirmarSenha: text})}
                   placeholder="Digite a senha novamente"
@@ -204,7 +206,7 @@ export default function RegisterScreen() {
 
           {/* Botão Cadastrar */}
           <TouchableOpacity
-            style={[styles.registerButton, carregando && styles.registerButtonDisabled]}
+            style={[styles.registerButton, { backgroundColor: theme.colors.secondary, borderRadius: theme.radius.md }, carregando && styles.registerButtonDisabled]}
             onPress={cadastrarIgreja}
             disabled={carregando}
           >
@@ -215,10 +217,10 @@ export default function RegisterScreen() {
           </TouchableOpacity>
 
           {/* Termos */}
-          <Text style={styles.termos}>
+          <Text style={[styles.termos, { color: theme.colors.subtleText }]}>
             Ao cadastrar, você concorda com nossos{' '}
-            <Text style={styles.termosLink}>Termos de Uso</Text> e{' '}
-            <Text style={styles.termosLink}>Política de Privacidade</Text>
+            <Text style={[styles.termosLink, { color: theme.colors.secondary }]}>Termos de Uso</Text> e{' '}
+            <Text style={[styles.termosLink, { color: theme.colors.secondary }]}>Política de Privacidade</Text>
           </Text>
         </View>
       </ScrollView>
