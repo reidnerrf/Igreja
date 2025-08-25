@@ -5,12 +5,15 @@ import {
   StyleSheet, 
   ScrollView,
   TouchableOpacity,
-  Image,
-  Dimensions
+  Dimensions,
+  FlatList
 } from 'react-native';
+import { Image } from 'expo-image';
+import EmptyState from '@/components/EmptyState';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CirclePlay as PlayCircle, Radio, Upload, Eye, Calendar, Clock } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 
 const { width } = Dimensions.get('window');
 
@@ -58,6 +61,7 @@ const transmissoesExemplo: Transmissao[] = [
 ];
 
 export default function TransmissoesScreen() {
+  const { t } = useTranslation();
   const [transmissoes, setTransmissoes] = useState<Transmissao[]>(transmissoesExemplo);
   const [filtro, setFiltro] = useState<'todas' | 'ao-vivo' | 'gravadas'>('todas');
 
@@ -77,11 +81,11 @@ export default function TransmissoesScreen() {
         style={styles.header}
       >
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Transmissões</Text>
-          <Text style={styles.headerSubtitle}>Missas e eventos ao vivo</Text>
+          <Text style={styles.headerTitle}>{t('Transmissões', { defaultValue: 'Transmissões' })}</Text>
+          <Text style={styles.headerSubtitle}>{t('Missas e eventos ao vivo', { defaultValue: 'Missas e eventos ao vivo' })}</Text>
         </View>
         
-        <TouchableOpacity style={styles.uploadButton}>
+        <TouchableOpacity style={styles.uploadButton} accessibilityRole="button" accessibilityLabel="Enviar vídeo">
           <Upload size={24} color="#FFFFFF" />
         </TouchableOpacity>
       </LinearGradient>
@@ -110,8 +114,8 @@ export default function TransmissoesScreen() {
 
       {/* Transmissão em Destaque */}
       <View style={styles.destaqueContainer}>
-        <Text style={styles.sectionTitle}>Em Destaque</Text>
-        <TouchableOpacity style={styles.destaqueCard}>
+        <Text style={styles.sectionTitle}>{t('Em Destaque', { defaultValue: 'Em Destaque' })}</Text>
+        <TouchableOpacity style={styles.destaqueCard} accessibilityRole="button" accessibilityLabel="Transmissão em destaque">
           <Image 
             source={{ uri: transmissoes[0]?.thumbnail }}
             style={styles.destaqueThumbnail}
@@ -139,13 +143,23 @@ export default function TransmissoesScreen() {
       </View>
 
       {/* Lista de Transmissões */}
-      <ScrollView style={styles.listaContainer} showsVerticalScrollIndicator={false}>
-        <Text style={styles.sectionTitle}>
-          Todas as Transmissões ({transmissoesFiltradas.length})
-        </Text>
-        
-        {transmissoesFiltradas.map((transmissao) => (
-          <TouchableOpacity key={transmissao.id} style={styles.transmissaoCard}>
+      <FlatList
+        style={styles.listaContainer}
+        data={transmissoesFiltradas}
+        keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={false}
+        initialNumToRender={6}
+        maxToRenderPerBatch={6}
+        windowSize={7}
+        removeClippedSubviews
+        ListEmptyComponent={<EmptyState title="Sem transmissões" subtitle="Volte mais tarde." />}
+        ListHeaderComponent={
+          <Text style={styles.sectionTitle}>
+            {t('Todas as Transmissões', { defaultValue: 'Todas as Transmissões' })} ({transmissoesFiltradas.length})
+          </Text>
+        }
+        renderItem={({ item: transmissao }) => (
+          <TouchableOpacity style={styles.transmissaoCard} accessibilityRole="button" accessibilityLabel={transmissao.titulo} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Image 
               source={{ uri: transmissao.thumbnail }}
               style={styles.thumbnail}
@@ -186,8 +200,8 @@ export default function TransmissoesScreen() {
               </View>
             </View>
           </TouchableOpacity>
-        ))}
-      </ScrollView>
+        )}
+      />
     </SafeAreaView>
   );
 }

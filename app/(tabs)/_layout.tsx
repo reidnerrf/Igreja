@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { MapPin, Calendar, CirclePlay as PlayCircle, Heart, MessageCircle, DollarSign, Gift, Bell, Users, Settings } from 'lucide-react-native';
 
 export default function TabLayout() {
@@ -11,8 +12,8 @@ export default function TabLayout() {
           borderTopWidth: 1,
           borderTopColor: '#E5E7EB',
           paddingTop: 5,
-          paddingBottom: 5,
-          height: 65,
+          paddingBottom: 8,
+          height: 64,
         },
         tabBarActiveTintColor: '#1E40AF',
         tabBarInactiveTintColor: '#6B7280',
@@ -21,6 +22,14 @@ export default function TabLayout() {
           fontWeight: '500',
           marginTop: 2,
         },
+        tabBarHideOnKeyboard: true,
+        tabBarButton: (props) => {
+          const onPress = () => {
+            Haptics.selectionAsync();
+            props.onPress?.();
+          };
+          return <props.children.type {...props} onPress={onPress} />;
+        }
       }}>
       <Tabs.Screen
         name="index"

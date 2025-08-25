@@ -1,5 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { memo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Image } from 'expo-image';
 
 interface CatholicCardProps {
   title: string;
@@ -11,7 +12,7 @@ interface CatholicCardProps {
   accentColor?: string;
 }
 
-export default function CatholicCard({
+function CatholicCardComponent({
   title,
   subtitle,
   content,
@@ -24,6 +25,9 @@ export default function CatholicCard({
     <TouchableOpacity 
       style={styles.container}
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       activeOpacity={0.8}
     >
       {image && (
@@ -47,13 +51,16 @@ export default function CatholicCard({
             style={[styles.actionButton, { backgroundColor: accentColor }]}
             onPress={onPress}
           >
-            <Text style={styles.actionText}>{actionLabel}</Text>
+            <Text accessibilityRole="text" style={styles.actionText}>{actionLabel}</Text>
           </TouchableOpacity>
         )}
       </View>
     </TouchableOpacity>
   );
 }
+
+const CatholicCard = memo(CatholicCardComponent);
+export default CatholicCard;
 
 const styles = StyleSheet.create({
   container: {
