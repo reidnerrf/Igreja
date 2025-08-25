@@ -6,10 +6,11 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Image,
   Alert,
   FlatList
 } from 'react-native';
+import { Image } from 'expo-image';
+import EmptyState from '@/components/EmptyState';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { 
@@ -21,6 +22,7 @@ import {
   User,
   Shield
 } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 
 interface Mensagem {
   id: string;
@@ -75,12 +77,13 @@ const mensagensExemplo: Mensagem[] = [
 ];
 
 export default function ComunidadeScreen() {
+  const { t } = useTranslation();
   const [mensagens, setMensagens] = useState<Mensagem[]>(mensagensExemplo);
   const [novaMensagem, setNovaMensagem] = useState('');
 
   const enviarMensagem = () => {
     if (!novaMensagem.trim()) {
-      Alert.alert('Erro', 'Digite uma mensagem antes de enviar');
+      Alert.alert(t('Erro', { defaultValue: 'Erro' }), t('Digite uma mensagem antes de enviar', { defaultValue: 'Digite uma mensagem antes de enviar' }));
       return;
     }
 
@@ -99,7 +102,7 @@ export default function ComunidadeScreen() {
 
     setMensagens([mensagem, ...mensagens]);
     setNovaMensagem('');
-    Alert.alert('Enviado', 'Sua mensagem será revisada antes de ser publicada');
+    Alert.alert(t('Enviado', { defaultValue: 'Enviado' }), t('Sua mensagem será revisada antes de ser publicada', { defaultValue: 'Sua mensagem será revisada antes de ser publicada' }));
   };
 
   const curtirMensagem = (id: string) => {
@@ -166,19 +169,22 @@ export default function ComunidadeScreen() {
             style={styles.mensagemInput}
             value={novaMensagem}
             onChangeText={setNovaMensagem}
-            placeholder="Compartilhe com a comunidade..."
+            placeholder={t('Compartilhe com a comunidade...', { defaultValue: 'Compartilhe com a comunidade...' })}
             multiline
             maxLength={280}
           />
           <TouchableOpacity
             style={styles.enviarButton}
             onPress={enviarMensagem}
+            accessibilityLabel="Enviar mensagem"
+            accessibilityRole="button"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <Send size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
         <Text style={styles.caracteresInfo}>
-          {novaMensagem.length}/280 caracteres
+          {novaMensagem.length}/280 {t('caracteres', { defaultValue: 'caracteres' })}
         </Text>
       </View>
 
@@ -188,6 +194,11 @@ export default function ComunidadeScreen() {
         data={mensagens}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
+        initialNumToRender={8}
+        maxToRenderPerBatch={8}
+        windowSize={7}
+        removeClippedSubviews
+        ListEmptyComponent={<EmptyState title="Sem mensagens" subtitle="Seja o primeiro a publicar." />}
         renderItem={({ item: mensagem }) => (
           <View style={styles.mensagemCard}>
             <View style={styles.mensagemHeader}>
@@ -220,6 +231,9 @@ export default function ComunidadeScreen() {
               <TouchableOpacity
                 style={styles.curtirButton}
                 onPress={() => curtirMensagem(mensagem.id)}
+                accessibilityLabel="Curtir"
+                accessibilityRole="button"
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
                 <Heart size={16} color="#DC2626" />
                 <Text style={styles.curtidasText}>

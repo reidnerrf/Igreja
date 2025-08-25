@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Image } from 'expo-image';
 
 interface CatholicCardProps {
   title: string;
@@ -24,6 +25,9 @@ function CatholicCardComponent({
     <TouchableOpacity 
       style={styles.container}
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       activeOpacity={0.8}
     >
       {image && (
@@ -47,7 +51,7 @@ function CatholicCardComponent({
             style={[styles.actionButton, { backgroundColor: accentColor }]}
             onPress={onPress}
           >
-            <Text style={styles.actionText}>{actionLabel}</Text>
+            <Text accessibilityRole="text" style={styles.actionText}>{actionLabel}</Text>
           </TouchableOpacity>
         )}
       </View>
