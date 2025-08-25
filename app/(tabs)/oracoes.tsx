@@ -19,6 +19,8 @@ import {
   Heart,
   Check
 } from 'lucide-react-native';
+import { useTheme, tokens } from '@/constants/theme';
+import PressableScale from '@/components/PressableScale';
 
 interface PedidoOracao {
   id: string;
@@ -68,6 +70,7 @@ const statusLabels = {
 };
 
 export default function OracoesScreen() {
+  const theme = useTheme();
   const [pedidos, setPedidos] = useState<PedidoOracao[]>(pedidosExemplo);
   const [modalVisible, setModalVisible] = useState(false);
   const [novoPedido, setNovoPedido] = useState({
@@ -102,9 +105,9 @@ export default function OracoesScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <LinearGradient
-        colors={['#059669', '#10B981']}
+        colors={[tokens.emerald[600], tokens.emerald[500]]}
         style={styles.header}
       >
         <View style={styles.headerContent}>
@@ -112,46 +115,46 @@ export default function OracoesScreen() {
           <Text style={styles.headerSubtitle}>Intenções da comunidade</Text>
         </View>
         
-        <TouchableOpacity
-          style={styles.addButton}
+        <PressableScale
+          style={[styles.addButton, { borderRadius: theme.radius.md }]}
           onPress={() => setModalVisible(true)}
         >
           <Plus size={24} color="#FFFFFF" />
-        </TouchableOpacity>
+        </PressableScale>
       </LinearGradient>
 
       {/* Estatísticas */}
       <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>
+        <View style={[styles.statCard, { backgroundColor: theme.colors.surface }] }>
+          <Text style={[styles.statNumber, { color: theme.colors.text }]}>
             {pedidos.filter(p => p.status === 'orando').length}
           </Text>
-          <Text style={styles.statLabel}>Em Oração</Text>
+          <Text style={[styles.statLabel, { color: theme.colors.subtleText }]}>Em Oração</Text>
         </View>
         
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>
+        <View style={[styles.statCard, { backgroundColor: theme.colors.surface }] }>
+          <Text style={[styles.statNumber, { color: theme.colors.text }]}>
             {pedidos.filter(p => p.status === 'atendido').length}
           </Text>
-          <Text style={styles.statLabel}>Atendidos</Text>
+          <Text style={[styles.statLabel, { color: theme.colors.subtleText }]}>Atendidos</Text>
         </View>
         
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{pedidos.length}</Text>
-          <Text style={styles.statLabel}>Total</Text>
+        <View style={[styles.statCard, { backgroundColor: theme.colors.surface }] }>
+          <Text style={[styles.statNumber, { color: theme.colors.text }]}>{pedidos.length}</Text>
+          <Text style={[styles.statLabel, { color: theme.colors.subtleText }]}>Total</Text>
         </View>
       </View>
 
       {/* Lista de Pedidos */}
       <ScrollView style={styles.pedidosContainer} showsVerticalScrollIndicator={false}>
         {pedidos.map((pedido) => (
-          <View key={pedido.id} style={styles.pedidoCard}>
+          <View key={pedido.id} style={[styles.pedidoCard, { backgroundColor: theme.colors.surface }]}>
             <View style={styles.pedidoHeader}>
               <View style={styles.userInfo}>
-                <View style={styles.userAvatar}>
-                  <User size={16} color="#6B7280" />
+                <View style={[styles.userAvatar, { backgroundColor: theme.colors.muted }]}>
+                  <User size={16} color={theme.colors.mutedForeground} />
                 </View>
-                <Text style={styles.userName}>{pedido.nome}</Text>
+                <Text style={[styles.userName, { color: theme.colors.text }]}>{pedido.nome}</Text>
               </View>
               
               <View style={[
@@ -171,40 +174,40 @@ export default function OracoesScreen() {
             </View>
             
             <Text style={styles.intencaoTitulo}>Intenção:</Text>
-            <Text style={styles.intencaoTexto}>{pedido.intencao}</Text>
+            <Text style={[styles.intencaoTexto, { color: theme.colors.text }]}>{pedido.intencao}</Text>
             
             {pedido.comentario && (
               <>
-                <Text style={styles.comentarioTitulo}>Comentário:</Text>
-                <Text style={styles.comentarioTexto}>{pedido.comentario}</Text>
+                <Text style={[styles.comentarioTitulo, { color: theme.colors.subtleText }]}>Comentário:</Text>
+                <Text style={[styles.comentarioTexto, { color: theme.colors.subtleText }]}>{pedido.comentario}</Text>
               </>
             )}
             
             <View style={styles.pedidoFooter}>
               <View style={styles.dataInfo}>
-                <Clock size={14} color="#6B7280" />
-                <Text style={styles.dataText}>
+                <Clock size={14} color={theme.colors.mutedForeground} />
+                <Text style={[styles.dataText, { color: theme.colors.mutedForeground }]}>
                   {new Date(pedido.data).toLocaleDateString('pt-BR')}
                 </Text>
               </View>
               
               <View style={styles.acoesPedido}>
                 {pedido.status === 'pendente' && (
-                  <TouchableOpacity
-                    style={styles.acaoButton}
+                  <PressableScale
+                    style={[styles.acaoButton, { backgroundColor: theme.colors.muted }]}
                     onPress={() => atualizarStatus(pedido.id, 'orando')}
                   >
-                    <Heart size={16} color="#1E40AF" />
-                  </TouchableOpacity>
+                    <Heart size={16} color={tokens.blue[800]} />
+                  </PressableScale>
                 )}
                 
                 {pedido.status === 'orando' && (
-                  <TouchableOpacity
-                    style={styles.acaoButton}
+                  <PressableScale
+                    style={[styles.acaoButton, { backgroundColor: theme.colors.muted }]}
                     onPress={() => atualizarStatus(pedido.id, 'atendido')}
                   >
-                    <Check size={16} color="#059669" />
-                  </TouchableOpacity>
+                    <Check size={16} color={tokens.emerald[600]} />
+                  </PressableScale>
                 )}
               </View>
             </View>
@@ -218,54 +221,57 @@ export default function OracoesScreen() {
         animationType="slide"
         presentationStyle="pageSheet"
       >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
+          <View style={[styles.modalHeader, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
             <TouchableOpacity onPress={() => setModalVisible(false)}>
-              <Text style={styles.cancelarText}>Cancelar</Text>
+              <Text style={[styles.cancelarText, { color: theme.colors.subtleText }]}>Cancelar</Text>
             </TouchableOpacity>
             
-            <Text style={styles.modalTitle}>Novo Pedido</Text>
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Novo Pedido</Text>
             
             <TouchableOpacity onPress={adicionarPedido}>
-              <Text style={styles.salvarText}>Enviar</Text>
+              <Text style={[styles.salvarText, { color: theme.colors.secondary }]}>Enviar</Text>
             </TouchableOpacity>
           </View>
           
           <ScrollView style={styles.modalForm}>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Nome *</Text>
+              <Text style={[styles.inputLabel, { color: theme.colors.subtleText }]}>Nome *</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text }]}
                 value={novoPedido.nome}
                 onChangeText={(text) => setNovoPedido({...novoPedido, nome: text})}
                 placeholder="Seu nome"
+                placeholderTextColor={theme.colors.mutedForeground}
               />
             </View>
             
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Intenção *</Text>
+              <Text style={[styles.inputLabel, { color: theme.colors.subtleText }]}>Intenção *</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text }]}
                 value={novoPedido.intencao}
                 onChangeText={(text) => setNovoPedido({...novoPedido, intencao: text})}
                 placeholder="Para que você gostaria que orássemos?"
+                placeholderTextColor={theme.colors.mutedForeground}
               />
             </View>
             
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Comentário (opcional)</Text>
+              <Text style={[styles.inputLabel, { color: theme.colors.subtleText }]}>Comentário (opcional)</Text>
               <TextInput
-                style={[styles.input, styles.textArea]}
+                style={[styles.input, styles.textArea, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text }]}
                 value={novoPedido.comentario}
                 onChangeText={(text) => setNovoPedido({...novoPedido, comentario: text})}
                 placeholder="Compartilhe mais detalhes se desejar..."
+                placeholderTextColor={theme.colors.mutedForeground}
                 multiline
                 numberOfLines={4}
               />
             </View>
             
-            <View style={styles.avisoContainer}>
-              <Text style={styles.avisoText}>
+            <View style={[styles.avisoContainer, { backgroundColor: theme.colors.muted }]}>
+              <Text style={[styles.avisoText, { color: theme.colors.text }]}>
                 Seu pedido será compartilhado com a comunidade para orações em conjunto.
               </Text>
             </View>

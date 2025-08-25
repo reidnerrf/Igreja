@@ -1,39 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useTheme } from '@/constants/theme';
 
 interface StatusBadgeProps {
   status: string;
   variant?: 'success' | 'warning' | 'error' | 'info' | 'neutral';
   size?: 'small' | 'medium' | 'large';
 }
-
-const variantStyles = {
-  success: {
-    backgroundColor: '#ECFDF5',
-    textColor: '#059669',
-    borderColor: '#6EE7B7',
-  },
-  warning: {
-    backgroundColor: '#FEF3C7',
-    textColor: '#92400E',
-    borderColor: '#FCD34D',
-  },
-  error: {
-    backgroundColor: '#FEE2E2',
-    textColor: '#DC2626',
-    borderColor: '#FCA5A5',
-  },
-  info: {
-    backgroundColor: '#DBEAFE',
-    textColor: '#1E40AF',
-    borderColor: '#93C5FD',
-  },
-  neutral: {
-    backgroundColor: '#F3F4F6',
-    textColor: '#6B7280',
-    borderColor: '#D1D5DB',
-  },
-};
 
 const sizeStyles = {
   small: {
@@ -53,12 +26,41 @@ const sizeStyles = {
   },
 };
 
+const makeVariantStyles = (theme: ReturnType<typeof useTheme>) => ({
+  success: {
+    backgroundColor: theme.colors.success + '20',
+    textColor: theme.colors.success,
+    borderColor: theme.colors.success + '55',
+  },
+  warning: {
+    backgroundColor: theme.colors.warning + '20',
+    textColor: theme.colors.warning,
+    borderColor: theme.colors.warning + '55',
+  },
+  error: {
+    backgroundColor: theme.colors.error + '20',
+    textColor: theme.colors.error,
+    borderColor: theme.colors.error + '55',
+  },
+  info: {
+    backgroundColor: theme.colors.info + '20',
+    textColor: theme.colors.info,
+    borderColor: theme.colors.info + '55',
+  },
+  neutral: {
+    backgroundColor: theme.colors.muted,
+    textColor: theme.colors.mutedForeground,
+    borderColor: theme.colors.border,
+  },
+});
+
 export default function StatusBadge({ 
   status, 
   variant = 'neutral', 
   size = 'medium' 
 }: StatusBadgeProps) {
-  const variantStyle = variantStyles[variant];
+  const theme = useTheme();
+  const variantStyle = makeVariantStyles(theme)[variant];
   const sizeStyle = sizeStyles[size];
 
   return (
@@ -86,7 +88,7 @@ export default function StatusBadge({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 12,
+    borderRadius: 999,
     borderWidth: 1,
     alignSelf: 'flex-start',
   },

@@ -106,7 +106,7 @@ export default function DoacoesScreen() {
         </View>
         
         <View style={styles.totalContainer}>
-          <Text style={styles.totalLabel}>Este mês</Text>
+          <Text style={styles.headerTotalLabel}>Este mês</Text>
           <Text style={styles.totalValue}>R$ 12.450</Text>
         </View>
       </LinearGradient>
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
   totalContainer: {
     alignItems: 'flex-end',
   },
-  totalLabel: {
+  headerTotalLabel: {
     fontSize: 12,
     color: '#FDE68A',
     fontWeight: '500',
