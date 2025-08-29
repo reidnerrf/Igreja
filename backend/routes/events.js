@@ -1,0 +1,296 @@
+const express = require('express');
+const Event = require('../models/Event');
+const User = require('../models/User');
+const { authenticateToken, requireChurch } = require('../middleware/auth');
+const { body, validationResult } = require('express-validator');
+
+const router = express.Router();
+
+// Validações
+const validateEvent = [
+  body('title').trim().isLength({ min: 3 }).withMessage('Título deve ter pelo menos 3 caracteres'),
+  body('date').isISO8601().withMessage('Data inválida'),
+  body('time').matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Horário inválido'),
+];
+
+// Listar eventos
+router.get('/', async (req, res) => {
+  try {
+    const { 
+      church, 
+      category, 
+      date, 
+      status = 'published',
+      page = 1, 
+      limit = 20,
+      lat,
+      lng,
+      radius = 10 // km
+    } = req.query;
+
+    let query = { status };
+    
+    // Filtrar por igreja
+    if (church) {
+      query.church = church;
+    }
+    
+    // Filtrar por categoria
+    if (category) {
+      query.category = category;
+    }
+    
+    // Filtrar por data
+    if (date) {
+      const startDate = new Date(date);
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + 1);
+      
+      query.date = {
+        $gte: startDate,
+        $lt: endDate
+      };
+    }
+    
+    // Filtrar por localização
+    if (lat && lng) {
+      const churches = await User.find({
+        userType: 'church',
+        'churchData.location': {
+          $near: {
+            $geometry: {
+              type: 'Point',
+              coordinates: [parseFloat(lng), parseFloat(lat)]
+            },
+            $maxDistance: radius * 1000 // converter para metros
+          }
+        }
+      });
+      
+      const churchIds = churches.map(church => church._id);
+      query.church = { $in: churchIds };
+    }
+
+    const events = await Event.find(query)
+      .populate('church', 'name profileImage churchData')
+      .sort({ date: 1, time: 1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+
+    const total = await Event.countDocuments(query);
+
+    res.json({
+      success: true,
+      events,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao buscar eventos:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Buscar evento por ID
+router.get('/:id', async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id)
+      .populate('church', 'name profileImage churchData')
+      .populate('attendees.user', 'name profileImage');
+
+    if (!event) {
+      return res.status(404).json({ error: 'Evento não encontrado' });
+    }
+
+    res.json({ success: true, event });
+  } catch (error) {
+    console.error('Erro ao buscar evento:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Criar evento
+router.post('/', authenticateToken, requireChurch, validateEvent, async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const eventData = {
+      ...req.body,
+      church: req.user.userId
+    };
+
+    const event = new Event(eventData);
+    await event.save();
+
+    await event.populate('church', 'name profileImage churchData');
+
+    // Incrementar contador de eventos da igreja
+    await User.findByIdAndUpdate(req.user.userId, {
+      $inc: { 'stats.totalEvents': 1 }
+    });
+
+    res.status(201).json({ success: true, event });
+  } catch (error) {
+    console.error('Erro ao criar evento:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Atualizar evento
+router.put('/:id', authenticateToken, requireChurch, validateEvent, async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const event = await Event.findOne({
+      _id: req.params.id,
+      church: req.user.userId
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Evento não encontrado' });
+    }
+
+    Object.assign(event, req.body);
+    await event.save();
+
+    await event.populate('church', 'name profileImage churchData');
+
+    res.json({ success: true, event });
+  } catch (error) {
+    console.error('Erro ao atualizar evento:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Deletar evento
+router.delete('/:id', authenticateToken, requireChurch, async (req, res) => {
+  try {
+    const event = await Event.findOne({
+      _id: req.params.id,
+      church: req.user.userId
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Evento não encontrado' });
+    }
+
+    await Event.findByIdAndDelete(req.params.id);
+
+    // Decrementar contador de eventos da igreja
+    await User.findByIdAndUpdate(req.user.userId, {
+      $inc: { 'stats.totalEvents': -1 }
+    });
+
+    res.json({ success: true, message: 'Evento deletado com sucesso' });
+  } catch (error) {
+    console.error('Erro ao deletar evento:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Confirmar presença
+router.post('/:id/attend', authenticateToken, async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    
+    if (!event) {
+      return res.status(404).json({ error: 'Evento não encontrado' });
+    }
+
+    // Verificar se já confirmou presença
+    const existingAttendee = event.attendees.find(
+      attendee => attendee.user.toString() === req.user.userId
+    );
+
+    if (existingAttendee) {
+      return res.status(400).json({ error: 'Presença já confirmada' });
+    }
+
+    // Verificar limite de participantes
+    if (event.maxAttendees && event.getAttendeesCount() >= event.maxAttendees) {
+      return res.status(400).json({ error: 'Evento lotado' });
+    }
+
+    // Adicionar participante
+    event.attendees.push({
+      user: req.user.userId,
+      status: 'confirmed'
+    });
+
+    await event.save();
+
+    res.json({ 
+      success: true, 
+      message: 'Presença confirmada',
+      attendeesCount: event.getAttendeesCount()
+    });
+  } catch (error) {
+    console.error('Erro ao confirmar presença:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Cancelar presença
+router.delete('/:id/attend', authenticateToken, async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    
+    if (!event) {
+      return res.status(404).json({ error: 'Evento não encontrado' });
+    }
+
+    // Remover participante
+    event.attendees = event.attendees.filter(
+      attendee => attendee.user.toString() !== req.user.userId
+    );
+
+    await event.save();
+
+    res.json({ 
+      success: true, 
+      message: 'Presença cancelada',
+      attendeesCount: event.getAttendeesCount()
+    });
+  } catch (error) {
+    console.error('Erro ao cancelar presença:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Obter participantes do evento
+router.get('/:id/attendees', authenticateToken, async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id)
+      .populate('attendees.user', 'name profileImage');
+
+    if (!event) {
+      return res.status(404).json({ error: 'Evento não encontrado' });
+    }
+
+    // Verificar se é a igreja dona do evento
+    if (event.church.toString() !== req.user.userId) {
+      return res.status(403).json({ error: 'Acesso negado' });
+    }
+
+    res.json({ 
+      success: true, 
+      attendees: event.attendees,
+      total: event.getAttendeesCount()
+    });
+  } catch (error) {
+    console.error('Erro ao buscar participantes:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+module.exports = router;
