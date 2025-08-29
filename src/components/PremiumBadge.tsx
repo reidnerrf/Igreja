@@ -1,16 +1,33 @@
 import React from 'react';
-import { Badge } from './ui/badge';
-import { Crown } from 'lucide-react';
+import { View, Text, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../contexts/ThemeContext';
 
-interface PremiumBadgeProps {
-  className?: string;
-}
+export function PremiumBadge() {
+  const { colors } = useTheme();
 
-export function PremiumBadge({ className }: PremiumBadgeProps) {
+  const styles = StyleSheet.create({
+    badge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.gold + '20',
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
+      marginLeft: 8,
+    },
+    text: {
+      fontSize: 10,
+      fontWeight: 'bold',
+      color: colors.gold,
+      marginLeft: 4,
+    },
+  });
+
   return (
-    <Badge variant="secondary" className={`bg-gradient-to-r from-yellow-100 to-yellow-200 dark:from-yellow-900 dark:to-yellow-800 text-yellow-800 dark:text-yellow-200 border-yellow-300 ${className}`}>
-      <Crown className="w-3 h-3 mr-1" />
-      Premium
-    </Badge>
+    <View style={styles.badge}>
+      <Ionicons name="star" size={12} color={colors.gold} />
+      <Text style={styles.text}>PREMIUM</Text>
+    </View>
   );
 }
