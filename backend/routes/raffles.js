@@ -225,6 +225,12 @@ router.post('/:id/draw', authenticateToken, requireChurch, async (req, res) => {
 
     await raffle.populate('winner.user', 'name profileImage');
 
+    // Emitir evento ao vivo
+    try {
+      const io = req.app.get('io');
+      io && io.to(`raffle:${raffle._id}`).emit('raffle_drawn', { raffleId: raffle._id, winner: raffle.winner });
+    } catch (e) { console.warn('emit raffle_drawn failed', e?.message); }
+
     res.json({ 
       success: true, 
       message: 'Sorteio realizado com sucesso',

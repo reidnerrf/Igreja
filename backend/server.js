@@ -90,6 +90,7 @@ app.use('*', (req, res) => {
 
 // Socket.IO Chat
 const ChatMessage = require('./models/Chat');
+app.set('io', io);
 io.on('connection', (socket) => {
   socket.on('join', (room) => {
     socket.join(room);

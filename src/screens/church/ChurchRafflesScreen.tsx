@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +8,7 @@ import { CreateRaffleModal } from '../../components/modals/CreateRaffleModal';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRaffles } from '../../hooks/useApi';
 import { apiService } from '../../services/api';
+import { chatService } from '../../services/chatService';
 
 export function ChurchRafflesScreen() {
   const { colors } = useTheme();
@@ -16,12 +17,33 @@ export function ChurchRafflesScreen() {
   const { data: rafflesData, loading, error, refetch } = useRaffles({ scope: 'church' });
   const raffles = rafflesData || [];
 
+  useEffect(() => {
+    chatService.connect();
+    const handler = (p: any) => {
+      Alert.alert('Sorteio Concluído', `Vencedor: número ${p?.winner?.ticket}`);
+      refetch();
+    };
+    chatService.onRaffleDrawn(handler);
+    return () => chatService.offRaffleDrawn(handler);
+  }, []);
+
   const openCreate = () => {
     if (!user?.isPremium) {
       Alert.alert('Recurso Premium', 'Faça upgrade para criar rifas.');
       return;
     }
     setShowModal(true);
+  };
+
+  const startLiveDraw = async (raffleId: string) => {
+    try {
+      chatService.joinRaffle(raffleId);
+      const res = await fetch(`${apiService['constructor']['API_BASE_URL'] || ''}` as any).catch(()=>null);
+      const draw = await fetch(`${apiService['API_BASE_URL'] || ''}/raffles/${raffleId}/draw`, { method: 'POST', headers: { 'Content-Type': 'application/json' } }).catch(()=>null as any);
+      // backend emitirá evento; UI ouvirá via socket
+    } catch (e) {
+      Alert.alert('Erro', 'Não foi possível iniciar o sorteio agora.');
+    }
   };
 
   const totalRevenue = raffles.reduce((sum: number, r: any) => sum + (r.price || 0) * (r.soldNumbers || 0), 0);
@@ -38,7 +60,8 @@ export function ChurchRafflesScreen() {
     stats: { flexDirection: 'row', gap: 12, marginBottom: 16 },
     stat: { flex: 1, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 16, alignItems: 'center' },
     statValue: { color: colors.foreground, fontWeight: 'bold' },
-    statLabel: { color: colors.mutedForeground, fontSize: 12 }
+    statLabel: { color: colors.mutedForeground, fontSize: 12 },
+    drawButton: { marginTop: 8, alignSelf: 'flex-start', backgroundColor: colors.gold, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 }
   });
 
   return (
@@ -64,7 +87,14 @@ export function ChurchRafflesScreen() {
           </View>
         </View>
         {(raffles.length > 0 ? raffles : []).map((r: any) => (
-          <RaffleCard key={r.id || r._id} raffle={r} />
+          <View key={r.id || r._id}>
+            <RaffleCard raffle={r} />
+            {user?.isPremium && (r.status==='active' || r.status==='sold_out') && (
+              <TouchableOpacity style={styles.drawButton} onPress={() => startLiveDraw(r._id || r.id)}>
+                <Text style={{ color: 'white', fontWeight: '600' }}>Iniciar Sorteio ao Vivo</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         ))}
       </ScrollView>
       <CreateRaffleModal visible={showModal} onClose={() => setShowModal(false)} onSubmit={async (data) => { await apiService.createRaffle(data); setShowModal(false); refetch(); }} />
