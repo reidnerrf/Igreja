@@ -12,6 +12,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { CreateEventModal } from '../../components/modals/CreateEventModal';
+import { useEvents } from '../../hooks/useApi';
+import { apiService } from '../../services/api';
 
 export function ChurchEventsScreen() {
   const { colors } = useTheme();
@@ -19,38 +21,8 @@ export function ChurchEventsScreen() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [filter, setFilter] = useState('all'); // all, today, week, month
   
-  const [events, setEvents] = useState([
-    {
-      id: 1,
-      title: 'Culto Dominical',
-      description: 'Culto de adoração e palavra',
-      date: '2025-01-12',
-      time: '19:00',
-      category: 'culto',
-      attendees: 350,
-      status: 'confirmed'
-    },
-    {
-      id: 2,
-      title: 'Estudo Bíblico',
-      description: 'Estudo do livro de João',
-      date: '2025-01-14',
-      time: '20:00',
-      category: 'estudo',
-      attendees: 80,
-      status: 'confirmed'
-    },
-    {
-      id: 3,
-      title: 'Reunião de Jovens',
-      description: 'Encontro dos jovens da igreja',
-      date: '2025-01-16',
-      time: '19:30',
-      category: 'jovens',
-      attendees: 120,
-      status: 'pending'
-    }
-  ]);
+  const { data: eventsData, loading, error, refetch } = useEvents({ filter });
+  const events = eventsData || [];
 
   const filters = [
     { id: 'all', label: 'Todos', icon: 'list' },
@@ -253,6 +225,22 @@ export function ChurchEventsScreen() {
     },
   });
 
+  const handleCreate = async (eventData: any) => {
+  	await apiService.createEvent(eventData);
+  	setShowCreateModal(false);
+  	refetch();
+  };
+
+  const handleEdit = async (item: any) => {
+  	await apiService.updateEvent(item.id, { ...item });
+  	refetch();
+  };
+
+  const handleDelete = async (item: any) => {
+  	await apiService.deleteEvent(item.id);
+  	refetch();
+  };
+
   const renderEventCard = ({ item }: { item: any }) => (
     <View style={styles.eventCard}>
       <View style={styles.eventCardHeader}>
@@ -290,23 +278,26 @@ export function ChurchEventsScreen() {
       </View>
 
       <View style={styles.eventActions}>
-        <TouchableOpacity style={[styles.actionButton, styles.editButton]}>
+        <TouchableOpacity style={[styles.actionButton, styles.editButton]} onPress={() => handleEdit(item)}>
           <Ionicons name="create" size={16} color={colors.primary} />
-          <Text style={[styles.actionButtonText, { color: colors.primary }]}>
+          <Text style={[styles.actionButtonText, { color: colors.primary }]}
+          >
             Editar
           </Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={[styles.actionButton, styles.shareButton]}>
           <Ionicons name="share" size={16} color={colors.success} />
-          <Text style={[styles.actionButtonText, { color: colors.success }]}>
+          <Text style={[styles.actionButtonText, { color: colors.success }]}
+          >
             Compartilhar
           </Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={[styles.actionButton, styles.deleteButton]}>
+        <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={() => handleDelete(item)}>
           <Ionicons name="trash" size={16} color={colors.destructive} />
-          <Text style={[styles.actionButtonText, { color: colors.destructive }]}>
+          <Text style={[styles.actionButtonText, { color: colors.destructive }]}
+          >
             Excluir
           </Text>
         </TouchableOpacity>
@@ -392,10 +383,7 @@ export function ChurchEventsScreen() {
       <CreateEventModal
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        onSubmit={(eventData) => {
-          console.log('Novo evento:', eventData);
-          setShowCreateModal(false);
-        }}
+        onSubmit={handleCreate}
       />
     </SafeAreaView>
   );

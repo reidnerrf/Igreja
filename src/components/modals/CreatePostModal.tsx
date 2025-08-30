@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../../contexts/ThemeContext';
+import { apiService } from '../../services/api';
 
 interface CreatePostModalProps {
   visible: boolean;
@@ -86,14 +87,24 @@ export function CreatePostModal({ visible, onClose, onSubmit, userType }: Create
     });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.content.trim() && formData.images.length === 0) {
       Alert.alert('Erro', 'Adicione um texto ou imagem para publicar');
       return;
     }
 
+    // Upload de imagens (se houver)
+    let uploadedUrls: string[] = [];
+    if (formData.images.length > 0) {
+      const uploads = await Promise.all(
+        formData.images.map(uri => apiService.uploadImage(uri, 'post'))
+      );
+      uploadedUrls = uploads.map(u => u.url || u.location || u.path || u); // aceitar diferentes formatos de resposta
+    }
+
     onSubmit({
       ...formData,
+      images: uploadedUrls.length > 0 ? uploadedUrls : formData.images,
       createdAt: new Date().toISOString(),
       likes: 0,
       comments: 0,

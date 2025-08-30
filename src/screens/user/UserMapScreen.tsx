@@ -13,6 +13,7 @@ import MapView, { Marker, Callout } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useTheme } from '../../contexts/ThemeContext';
+import { apiService } from '../../services/api';
 
 export function UserMapScreen() {
   const { colors } = useTheme();
@@ -20,6 +21,7 @@ export function UserMapScreen() {
   const [userLocation, setUserLocation] = useState(null);
   const [selectedChurch, setSelectedChurch] = useState(null);
   const [showChurchModal, setShowChurchModal] = useState(false);
+  const [nextEvents, setNextEvents] = useState<any[]>([]);
 
   const [churches] = useState([
     {
@@ -81,20 +83,41 @@ export function UserMapScreen() {
     }
   };
 
-  const handleMarkerPress = (church: any) => {
+  const handleMarkerPress = async (church: any) => {
     setSelectedChurch(church);
     setShowChurchModal(true);
+    try {
+      const res = await apiService.getEvents({ church: String(church.id), period: 'week', limit: 3 });
+      const events = res?.events || res || [];
+      setNextEvents(events.map((e: any) => ({
+        id: e._id || e.id,
+        title: e.title,
+        date: e.date ? new Date(e.date).toLocaleDateString() : '',
+        time: e.time || ''
+      })));
+    } catch (e) {
+      setNextEvents([]);
+    }
   };
 
-  const handleFollowChurch = (churchId: number) => {
-    Alert.alert(
-      'Seguir Igreja',
-      'Você receberá notificações sobre eventos e avisos desta igreja.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Seguir', onPress: () => console.log('Seguindo igreja:', churchId) }
-      ]
-    );
+  const handleFollowChurch = async (churchId: string | number) => {
+    try {
+      await apiService.followChurch(String(churchId));
+      Alert.alert('Seguindo', 'Você receberá notificações desta igreja');
+      setSelectedChurch((prev: any) => prev ? { ...prev, isFollowing: true } : prev);
+    } catch (e) {
+      Alert.alert('Erro', 'Não foi possível seguir agora');
+    }
+  };
+
+  const handleUnfollowChurch = async (churchId: string | number) => {
+    try {
+      await apiService.unfollowChurch(String(churchId));
+      Alert.alert('Parou de seguir', 'Você não receberá mais notificações desta igreja');
+      setSelectedChurch((prev: any) => prev ? { ...prev, isFollowing: false } : prev);
+    } catch (e) {
+      Alert.alert('Erro', 'Não foi possível deixar de seguir agora');
+    }
   };
 
   const openDirections = (church: any) => {
@@ -359,29 +382,35 @@ export function UserMapScreen() {
                   </View>
                 </View>
 
-                {selectedChurch.nextEvent && (
-                  <View style={styles.nextEventCard}>
-                    <Text style={styles.nextEventTitle}>Próximo Evento</Text>
-                    <Text style={styles.nextEventDetails}>
-                      {selectedChurch.nextEvent.title} - {selectedChurch.nextEvent.date} às {selectedChurch.nextEvent.time}
-                    </Text>
-                  </View>
-                )}
+                <View style={styles.nextEventCard}>
+                  <Text style={styles.nextEventTitle}>Próximos Eventos</Text>
+                  {nextEvents.length === 0 ? (
+                    <Text style={styles.nextEventDetails}>Sem eventos nos próximos dias</Text>
+                  ) : (
+                    nextEvents.map(ev => (
+                      <Text key={ev.id} style={styles.nextEventDetails}>{ev.title} - {ev.date} {ev.time ? `às ${ev.time}` : ''}</Text>
+                    ))
+                  )}
+                </View>
 
                 <View style={styles.actionsContainer}>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.followButton]}
-                    onPress={() => handleFollowChurch(selectedChurch.id)}
-                  >
-                    <Ionicons 
-                      name={selectedChurch.isFollowing ? "heart" : "heart-outline"} 
-                      size={20} 
-                      color="white" 
-                    />
-                    <Text style={styles.actionButtonText}>
-                      {selectedChurch.isFollowing ? 'Seguindo' : 'Seguir'}
-                    </Text>
-                  </TouchableOpacity>
+                  {selectedChurch.isFollowing ? (
+                    <TouchableOpacity
+                      style={[styles.actionButton, styles.followButton]}
+                      onPress={() => handleUnfollowChurch(selectedChurch.id)}
+                    >
+                      <Ionicons name="heart" size={20} color="white" />
+                      <Text style={styles.actionButtonText}>Seguindo</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      style={[styles.actionButton, styles.followButton]}
+                      onPress={() => handleFollowChurch(selectedChurch.id)}
+                    >
+                      <Ionicons name="heart-outline" size={20} color="white" />
+                      <Text style={styles.actionButtonText}>Seguir</Text>
+                    </TouchableOpacity>
+                  )}
                   
                   <TouchableOpacity
                     style={[styles.actionButton, styles.directionsButton]}

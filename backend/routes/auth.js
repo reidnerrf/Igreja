@@ -12,6 +12,10 @@ const validateRegistration = [
   body('email').isEmail().withMessage('Email inválido'),
   body('password').isLength({ min: 6 }).withMessage('Senha deve ter pelo menos 6 caracteres'),
   body('userType').isIn(['church', 'user']).withMessage('Tipo de usuário inválido'),
+  // Campos extras quando igreja
+  body('churchData.address').optional().isString(),
+  body('churchData.pixKey').optional().isString(),
+  body('churchData.denomination').optional().isString(),
 ];
 
 const validateLogin = [
@@ -42,6 +46,16 @@ router.post('/register', validateRegistration, async (req, res) => {
       email,
       password,
       userType,
+      ...(userType === 'church' ? {
+        churchData: {
+          address: additionalData.churchData?.address || '',
+          pixKey: additionalData.churchData?.pixKey || '',
+          denomination: additionalData.churchData?.denomination || '',
+          phone: additionalData.churchData?.phone || '',
+          instagram: additionalData.churchData?.instagram || '',
+          website: additionalData.churchData?.website || '',
+        }
+      } : {}),
       ...additionalData
     };
 

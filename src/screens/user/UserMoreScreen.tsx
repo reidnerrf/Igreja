@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { PremiumModal } from '../../components/modals/PremiumModal';
+import { useNavigation } from '@react-navigation/native';
 
 interface UserMoreScreenProps {
   onLogout: () => void;
@@ -21,6 +22,7 @@ interface UserMoreScreenProps {
 export function UserMoreScreen({ onLogout }: UserMoreScreenProps) {
   const { colors, theme, setTheme } = useTheme();
   const { user } = useAuth();
+  const navigation = useNavigation<any>();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [notifications, setNotifications] = useState(true);
 
@@ -32,6 +34,7 @@ export function UserMoreScreen({ onLogout }: UserMoreScreenProps) {
         { id: 'donations', title: 'Histórico de Doações', icon: 'card', premium: false },
         { id: 'raffles', title: 'Minhas Rifas', icon: 'gift', premium: true },
         { id: 'feed', title: 'Minhas Postagens', icon: 'camera', premium: false },
+        { id: 'communityChat', title: 'Chat da Comunidade', icon: 'chatbubbles', premium: false },
       ]
     },
     {
@@ -65,6 +68,27 @@ export function UserMoreScreen({ onLogout }: UserMoreScreenProps) {
         break;
       case 'notifications':
         setNotifications(!notifications);
+        break;
+      case 'prayers':
+        navigation.navigate('MyPrayers');
+        break;
+      case 'donations':
+        navigation.navigate('DonationHistory');
+        break;
+      case 'raffles':
+        navigation.navigate('MyRaffles');
+        break;
+      case 'feed':
+        navigation.navigate('MyPosts');
+        break;
+      case 'profile':
+        navigation.navigate('UserProfile');
+        break;
+      case 'privacy':
+        navigation.navigate('PrivacySettings');
+        break;
+      case 'communityChat':
+        navigation.navigate('CommunityChat');
         break;
       default:
         Alert.alert('Em Desenvolvimento', `Funcionalidade "${itemId}" será implementada em breve`);
@@ -199,117 +223,65 @@ export function UserMoreScreen({ onLogout }: UserMoreScreenProps) {
       backgroundColor: colors.destructive + '20',
       padding: 16,
       borderRadius: 12,
-      flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'center',
-      marginTop: 20,
+      marginTop: 16,
     },
-    logoutText: {
+    logoutButtonText: {
       color: colors.destructive,
-      fontSize: 16,
-      fontWeight: '600',
-      marginLeft: 8,
+      fontWeight: 'bold',
     },
   });
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Menu</Text>
+        <Text style={styles.title}>Mais</Text>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Profile Card */}
+      <ScrollView style={styles.content}>
+        {/* Perfil */}
         <View style={styles.profileCard}>
           <View style={styles.profileIcon}>
-            <Ionicons name="person" size={40} color={colors.primaryForeground} />
+            <Ionicons name="person" size={32} color={colors.primaryForeground} />
           </View>
           <Text style={styles.profileName}>{user?.name || 'Usuário'}</Text>
-          <Text style={styles.profileType}>Membro da Comunidade</Text>
-          
-          {!user?.isPremium && (
-            <TouchableOpacity 
-              style={styles.premiumButton}
-              onPress={() => setShowPremiumModal(true)}
-            >
-              <Ionicons name="diamond" size={16} color="white" />
-              <Text style={styles.premiumButtonText}>Upgrade Premium</Text>
-            </TouchableOpacity>
-          )}
+          <Text style={styles.profileType}>Membro da comunidade</Text>
         </View>
 
-        {/* Menu Sections */}
-        {menuSections.map((section, sectionIndex) => (
-          <View key={sectionIndex} style={styles.section}>
+        {menuSections.map((section) => (
+          <View key={section.title} style={styles.section}>
             <Text style={styles.sectionTitle}>{section.title}</Text>
-            
             {section.items.map((item) => (
               <TouchableOpacity
                 key={item.id}
-                style={[
-                  styles.menuItem,
-                  item.premium && !user?.isPremium && styles.menuItemPremium
-                ]}
+                style={[styles.menuItem, item.premium && styles.menuItemPremium]}
                 onPress={() => handleMenuPress(item.id, item.premium)}
               >
                 <View style={styles.menuIcon}>
-                  <Ionicons 
-                    name={item.icon as any} 
-                    size={20} 
-                    color={colors.primary} 
-                  />
+                  <Ionicons name={item.icon as any} size={20} color={colors.primary} />
                 </View>
-                
                 <View style={styles.menuContent}>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Text style={styles.menuTitle}>{item.title}</Text>
                     {item.premium && (
                       <View style={styles.premiumIndicator}>
-                        <Text style={styles.premiumIndicatorText}>PRO</Text>
+                        <Text style={styles.premiumIndicatorText}>PREMIUM</Text>
                       </View>
                     )}
                   </View>
                 </View>
-
-                {item.id === 'theme' ? (
-                  <Switch
-                    value={theme === 'dark'}
-                    onValueChange={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                    trackColor={{ false: colors.muted, true: colors.primary }}
-                    thumbColor={colors.card}
-                  />
-                ) : item.id === 'notifications' ? (
-                  <Switch
-                    value={notifications}
-                    onValueChange={setNotifications}
-                    trackColor={{ false: colors.muted, true: colors.primary }}
-                    thumbColor={colors.card}
-                  />
-                ) : (
-                  <Ionicons 
-                    name="chevron-forward" 
-                    size={20} 
-                    color={colors.mutedForeground}
-                  />
-                )}
+                <Ionicons name="chevron-forward" size={20} color={colors.mutedForeground} />
               </TouchableOpacity>
             ))}
           </View>
         ))}
 
-        {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
-          <Ionicons name="log-out" size={20} color={colors.destructive} />
-          <Text style={styles.logoutText}>Sair da Conta</Text>
+          <Text style={styles.logoutButtonText}>Sair</Text>
         </TouchableOpacity>
       </ScrollView>
 
-      <PremiumModal
-        visible={showPremiumModal}
-        onClose={() => setShowPremiumModal(false)}
-        userType="user"
-        onUpgrade={handlePremiumUpgrade}
-      />
+      <PremiumModal visible={showPremiumModal} onClose={() => setShowPremiumModal(false)} onUpgrade={handlePremiumUpgrade} />
     </SafeAreaView>
   );
 }

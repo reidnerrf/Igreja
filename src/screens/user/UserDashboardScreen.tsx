@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -13,44 +13,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { Card } from '../../components/Card';
+import { apiService } from '../../services/api';
 
 export function UserDashboardScreen() {
   const { colors } = useTheme();
   const { user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
 
-  const [upcomingEvents, setUpcomingEvents] = useState([
-    { 
-      id: 1, 
-      title: 'Culto Dominical', 
-      church: 'Igreja Batista Central', 
-      time: '19:00', 
-      date: 'Hoje',
-      image: 'https://images.unsplash.com/photo-1507692049790-de58290a4334?w=300&h=200&fit=crop'
-    },
-    { 
-      id: 2, 
-      title: 'Estudo Bíblico', 
-      church: 'Igreja Assembleia', 
-      time: '20:00', 
-      date: 'Amanhã',
-      image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=300&h=200&fit=crop'
-    },
-    { 
-      id: 3, 
-      title: 'Reunião de Jovens', 
-      church: 'Igreja Batista Central', 
-      time: '19:30', 
-      date: 'Sex',
-      image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=300&h=200&fit=crop'
-    }
-  ]);
-
-  const [dailyVerse] = useState({
-    text: "Porque eu bem sei os pensamentos que tenho a vosso respeito, diz o Senhor; pensamentos de paz e não de mal, para vos dar o fim que esperais.",
-    reference: "Jeremias 29:11"
-  });
-
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
+  const [dailyVerse, setDailyVerse] = useState({ text: '', reference: '' });
   const [followedChurches] = useState([
     { id: 1, name: 'Igreja Batista Central', followers: 1234 },
     { id: 2, name: 'Igreja Assembleia', followers: 856 },
@@ -64,9 +35,31 @@ export function UserDashboardScreen() {
     { id: 'donations', title: 'Doações', icon: 'card', color: colors.gold },
   ];
 
+  const load = async () => {
+    try {
+      const ev = await apiService.getEvents({ following: 'true', period: 'today', limit: 5 });
+      const events = ev?.events || ev || [];
+      setUpcomingEvents(events.map((e: any) => ({
+        id: e._id || e.id,
+        title: e.title,
+        church: e.church?.name || 'Igreja',
+        time: e.time || '',
+        date: new Date(e.date).toLocaleDateString(),
+        image: 'https://images.unsplash.com/photo-1507692049790-de58290a4334?w=300&h=200&fit=crop'
+      })));
+      const devo = await fetch(`${apiService['constructor']['API_BASE_URL'] || ''}` as any).catch(()=>null);
+    } catch {}
+    try {
+      const devoRes = await fetch(`${apiService['constructor']['API_BASE_URL'] || ''}` as any).then(r=>r.json()).catch(()=>null as any);
+      if (devoRes?.text) setDailyVerse({ text: devoRes.text, reference: devoRes.gospel });
+    } catch {}
+  };
+
+  useEffect(() => { load(); }, []);
+
   const onRefresh = async () => {
     setRefreshing(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await load();
     setRefreshing(false);
   };
 
@@ -313,14 +306,10 @@ export function UserDashboardScreen() {
               <Ionicons name="heart" size={24} color={colors.primaryForeground} />
             </View>
             <View>
-              <Text style={styles.headerTitle}>ConnectFé</Text>
-              <Text style={styles.headerSubtitle}>Sua comunidade de fé</Text>
+              <Text style={styles.headerTitle}>Olá, {user?.name?.split(' ')[0] || 'irmão(ã)'}!</Text>
+              <Text style={styles.headerSubtitle}>Que a paz esteja com você</Text>
             </View>
           </View>
-          
-          <TouchableOpacity>
-            <Ionicons name="notifications-outline" size={24} color={colors.foreground} />
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -331,110 +320,26 @@ export function UserDashboardScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Welcome Card */}
-        <View style={styles.welcomeCard}>
-          <View style={styles.welcomeContent}>
-            <Text style={styles.welcomeTitle}>Bem-vindo! 🙏</Text>
-            <Text style={styles.welcomeSubtitle}>
-              Conecte-se com sua comunidade de fé
-            </Text>
-          </View>
-          <Ionicons 
-            name="heart" 
-            size={48} 
-            color="rgba(255,255,255,0.8)" 
-            style={styles.welcomeIcon}
-          />
-        </View>
+        {/* Devocional do Dia */}
+        <Card>
+          <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.foreground, marginBottom: 8 }}>Evangelho do dia</Text>
+          <Text style={{ color: colors.mutedForeground, marginBottom: 6 }}>{dailyVerse.text || '...'}</Text>
+          <Text style={{ color: colors.mutedForeground, fontStyle: 'italic' }}>{dailyVerse.reference || ''}</Text>
+        </Card>
 
-        {/* Quick Actions */}
-        <View style={styles.quickActionsGrid}>
-          {quickActions.map((action) => (
-            <TouchableOpacity
-              key={action.id}
-              style={styles.quickActionButton}
-            >
-              <Ionicons 
-                name={action.icon as any} 
-                size={24} 
-                color={action.color} 
-                style={styles.quickActionIcon}
-              />
-              <Text style={styles.quickActionText}>{action.title}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Próximos Eventos */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Próximos Eventos</Text>
-            <TouchableOpacity style={styles.seeAllButton}>
-              <Text style={styles.seeAllText}>Ver Todos</Text>
-            </TouchableOpacity>
-          </View>
-          
-          {upcomingEvents.slice(0, 2).map((event) => (
-            <View key={event.id} style={styles.eventCard}>
-              <Image source={{ uri: event.image }} style={styles.eventImage} />
-              <View style={styles.eventContent}>
-                <View style={styles.eventHeader}>
-                  <Text style={styles.eventTitle}>{event.title}</Text>
-                  <View style={styles.eventBadge}>
-                    <Text style={styles.eventBadgeText}>{event.date}</Text>
-                  </View>
-                </View>
-                <Text style={styles.eventChurch}>{event.church}</Text>
-                <Text style={styles.eventTime}>{event.time}</Text>
+        {/* Próximos Eventos das Igrejas Seguidas */}
+        <Card>
+          <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.foreground, marginBottom: 12 }}>Hoje nas igrejas que você segue</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {upcomingEvents.map((e) => (
+              <View key={e.id} style={{ width: 220, marginRight: 12 }}>
+                <Image source={{ uri: e.image }} style={{ width: '100%', height: 120, borderRadius: 12, marginBottom: 8 }} />
+                <Text style={{ color: colors.foreground, fontWeight: '600' }}>{e.title}</Text>
+                <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>{e.church} • {e.time}</Text>
               </View>
-            </View>
-          ))}
-        </View>
-
-        {/* Versículo do Dia */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Versículo do Dia</Text>
-          </View>
-          
-          <View style={styles.verseCard}>
-            <Ionicons 
-              name="book" 
-              size={32} 
-              color={colors.primary} 
-              style={styles.verseIcon}
-            />
-            <Text style={styles.verseText}>"{dailyVerse.text}"</Text>
-            <Text style={styles.verseReference}>{dailyVerse.reference}</Text>
-          </View>
-        </View>
-
-        {/* Igrejas Seguidas */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Minhas Igrejas</Text>
-            <TouchableOpacity style={styles.seeAllButton}>
-              <Text style={styles.seeAllText}>Ver Todas</Text>
-            </TouchableOpacity>
-          </View>
-          
-          {followedChurches.slice(0, 3).map((church) => (
-            <View key={church.id} style={styles.churchItem}>
-              <View style={styles.churchIcon}>
-                <Ionicons name="business" size={20} color={colors.primary} />
-              </View>
-              <View style={styles.churchContent}>
-                <Text style={styles.churchName}>{church.name}</Text>
-                <Text style={styles.churchFollowers}>
-                  {church.followers.toLocaleString()} seguidores
-                </Text>
-              </View>
-              <TouchableOpacity style={styles.followButton}>
-                <Text style={styles.followButtonText}>Seguindo</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
+            ))}
+          </ScrollView>
+        </Card>
       </ScrollView>
     </SafeAreaView>
   );

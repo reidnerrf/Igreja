@@ -7,8 +7,8 @@ import { ThemeProvider } from './src/contexts/ThemeContext';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { OnboardingScreen } from './src/screens/OnboardingScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
-import { ChurchTabNavigator } from './src/navigation/ChurchTabNavigator';
-import { UserTabNavigator } from './src/navigation/UserTabNavigator';
+import { ChurchRootNavigator } from './src/navigation/ChurchRootNavigator';
+import { UserRootNavigator } from './src/navigation/UserRootNavigator';
 import { LoadingScreen } from './src/screens/LoadingScreen';
 
 const Stack = createStackNavigator();
@@ -77,11 +77,11 @@ export default function App() {
               </Stack.Screen>
             ) : userType === 'church' ? (
               <Stack.Screen name="ChurchApp">
-                {() => <ChurchTabNavigator onLogout={handleLogout} />}
+                {() => <ChurchRootNavigator onLogout={handleLogout} />}
               </Stack.Screen>
             ) : (
               <Stack.Screen name="UserApp">
-                {() => <UserTabNavigator onLogout={handleLogout} />}
+                {() => <UserRootNavigator onLogout={handleLogout} />}
               </Stack.Screen>
             )}
           </Stack.Navigator>

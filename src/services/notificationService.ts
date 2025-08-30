@@ -2,6 +2,7 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_BASE_URL } from './api';
 
 // Configurar como as notificações devem ser tratadas quando recebidas
 Notifications.setNotificationHandler({

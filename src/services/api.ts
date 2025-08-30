@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = __DEV__ ? 'http://localhost:3001/api' : 'https://your-api.com/api';
+export const API_BASE_URL = __DEV__ ? 'http://localhost:3001/api' : 'https://your-api.com/api';
 
 class ApiService {
   private async getAuthToken(): Promise<string | null> {
@@ -48,10 +48,10 @@ class ApiService {
     });
   }
 
-  async socialLogin(provider: string, token: string, userType: 'church' | 'user') {
+  async socialLogin(provider: string, token: string, userType: 'church' | 'user', userData?: any) {
     return this.request('/auth/social', {
       method: 'POST',
-      body: JSON.stringify({ provider, token, userType }),
+      body: JSON.stringify({ provider, token, userType, userData }),
     });
   }
 
@@ -72,15 +72,23 @@ class ApiService {
   }
 
   async unfollowChurch(churchId: string) {
-    return this.request(`/churches/${churchId}/unfollow`, {
+    return this.request(`/churches/${churchId}/follow`, {
       method: 'DELETE',
     });
   }
 
   // Events
   async getEvents(filters?: any) {
-    const params = new URLSearchParams(filters).toString();
+    const mapped: any = {};
+    if (filters?.filter) {
+      if (['today','week','month'].includes(filters.filter)) mapped.period = filters.filter;
+    }
+    const params = new URLSearchParams({ ...filters, ...mapped }).toString();
     return this.request(`/events?${params}`);
+  }
+
+  getEventIcsUrl(eventId: string) {
+    return `${API_BASE_URL}/events-ics/${eventId}.ics`;
   }
 
   async createEvent(eventData: any) {
@@ -111,7 +119,11 @@ class ApiService {
 
   // Transmissions
   async getTransmissions(filters?: any) {
-    const params = new URLSearchParams(filters).toString();
+    const mapped: any = {};
+    if (filters?.filter) {
+      if (['today','week','month'].includes(filters.filter)) mapped.period = filters.filter;
+    }
+    const params = new URLSearchParams({ ...filters, ...mapped }).toString();
     return this.request(`/transmissions?${params}`);
   }
 
@@ -124,7 +136,11 @@ class ApiService {
 
   // Donations
   async getDonations(filters?: any) {
-    const params = new URLSearchParams(filters).toString();
+    const mapped: any = {};
+    if (filters?.filter) {
+      if (['today','week','month'].includes(filters.filter)) mapped.period = filters.filter;
+    }
+    const params = new URLSearchParams({ ...filters, ...mapped }).toString();
     return this.request(`/donations?${params}`);
   }
 
@@ -142,11 +158,41 @@ class ApiService {
     });
   }
 
+  async listDonationCampaigns(filters?: any) {
+    const params = new URLSearchParams(filters || {}).toString();
+    return this.request(`/donations/campaigns?${params}`);
+  }
+
+  async getDonationCampaign(id: string) {
+    return this.request(`/donations/campaigns/${id}`);
+  }
+
+  async updateDonationCampaign(id: string, data: any) {
+    return this.request(`/donations/campaigns/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+
+  async deleteDonationCampaign(id: string) {
+    return this.request(`/donations/campaigns/${id}`, { method: 'DELETE' });
+  }
+
   async processDonation(donationId: string, paymentData: any) {
     return this.request(`/donations/${donationId}/process`, {
       method: 'POST',
       body: JSON.stringify(paymentData),
     });
+  }
+
+  getPublicCampaignUrl(slug: string) {
+    return `${API_BASE_URL}/donations/public/${slug}`;
+  }
+
+  // PIX
+  async generatePix(amount: number, church: string, campaign?: string, message?: string) {
+    return this.request('/pix/generate', { method: 'POST', body: JSON.stringify({ amount, church, campaign, message }) });
+  }
+
+  async getPixStatus(txid: string) {
+    return this.request(`/pix/status/${txid}`);
   }
 
   // Raffles

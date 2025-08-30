@@ -92,6 +92,11 @@ const donationCampaignSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  slug: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
   description: {
     type: String,
     trim: true
@@ -170,6 +175,7 @@ donationSchema.index({ method: 1, status: 1 });
 donationCampaignSchema.index({ church: 1, status: 1 });
 donationCampaignSchema.index({ endDate: 1, status: 1 });
 donationCampaignSchema.index({ category: 1, status: 1 });
+donationCampaignSchema.index({ slug: 1 }, { unique: true, sparse: true });
 
 // Middleware para atualizar campanha quando doação é processada
 donationSchema.post('save', async function() {

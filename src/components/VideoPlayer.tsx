@@ -2,10 +2,26 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
+import { WebView } from 'react-native-webview';
 
 interface VideoPlayerProps {
   url: string;
   onClose: () => void;
+}
+
+function toEmbed(url: string) {
+  if (url.includes('youtube.com/watch')) {
+    const id = url.split('v=')[1]?.split('&')[0];
+    return id ? `https://www.youtube.com/embed/${id}` : url;
+  }
+  if (url.includes('youtu.be/')) {
+    const id = url.split('youtu.be/')[1]?.split('?')[0];
+    return id ? `https://www.youtube.com/embed/${id}` : url;
+  }
+  if (url.includes('facebook.com')) {
+    return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=0&width=560`;
+  }
+  return url;
 }
 
 export function VideoPlayer({ url, onClose }: VideoPlayerProps) {
@@ -42,15 +58,11 @@ export function VideoPlayer({ url, onClose }: VideoPlayerProps) {
     },
     videoContainer: {
       flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
       backgroundColor: '#000',
     },
-    placeholder: {
-      color: 'white',
-      fontSize: 16,
-    },
   });
+
+  const embedUrl = toEmbed(url);
 
   return (
     <Modal visible={true} animationType="fade" transparent>
@@ -63,8 +75,7 @@ export function VideoPlayer({ url, onClose }: VideoPlayerProps) {
             </TouchableOpacity>
           </View>
           <View style={styles.videoContainer}>
-            <Text style={styles.placeholder}>Player de vídeo será implementado aqui</Text>
-            <Text style={styles.placeholder}>URL: {url}</Text>
+            <WebView source={{ uri: embedUrl }} allowsInlineMediaPlayback mediaPlaybackRequiresUserAction={false} />
           </View>
         </View>
       </View>
