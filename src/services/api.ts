@@ -48,10 +48,10 @@ class ApiService {
     });
   }
 
-  async socialLogin(provider: string, token: string, userType: 'church' | 'user') {
+  async socialLogin(provider: string, token: string, userType: 'church' | 'user', userData?: any) {
     return this.request('/auth/social', {
       method: 'POST',
-      body: JSON.stringify({ provider, token, userType }),
+      body: JSON.stringify({ provider, token, userType, userData }),
     });
   }
 

@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
+import { apiService } from '../services/api';
 
 interface LoginScreenProps {
   onLogin: (type: 'church' | 'user') => void;
@@ -46,12 +47,15 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
     }
   };
 
-  const handleSocialLogin = async (provider: string) => {
+  const handleSocialLogin = async (provider: 'Google' | 'Apple' | 'Facebook') => {
     setIsLoading(true);
     try {
-      // Simular login social
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      await login(`demo@${provider}.com`, 'demo123', userType);
+      // Obter credenciais do provedor (placeholder; integrar SDKs Expo AuthSession / Apple / Facebook)
+      const fakeToken = 'provider_token_demo';
+      const fakeUserData = { id: 'prov_user_id_demo', name: `${provider} User`, email: `user@${provider.toLowerCase()}.com`, picture: undefined };
+      await apiService.socialLogin(provider.toLowerCase(), fakeToken, userType, fakeUserData);
+      // Reutilizamos o contexto local demo
+      await login(fakeUserData.email, 'social', userType);
       onLogin(userType);
     } catch (error) {
       Alert.alert('Erro', `Falha no login com ${provider}`);
