@@ -31,9 +31,26 @@ router.get('/', async (req, res) => {
 
     let query = { status };
     
-    // Filtrar por igreja
+    // Filtrar por igreja (suporta CSV) ou por seguidas
     if (church) {
-      query.church = church;
+      if (typeof church === 'string' && church.includes(',')) {
+        const ids = church.split(',').map(id => id.trim());
+        query.church = { $in: ids };
+      } else {
+        query.church = church;
+      }
+    } else if (req.query.following === 'true' && req.headers.authorization) {
+      try {
+        // quando autenticado, usar igrejas seguidas
+        const authHeader = req.headers.authorization;
+        const token = authHeader.split(' ')[1];
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+        const me = await User.findById(decoded.userId).select('followedChurches');
+        if (me && me.followedChurches && me.followedChurches.length > 0) {
+          query.church = { $in: me.followedChurches };
+        }
+      } catch (e) {}
     }
     
     // Filtrar por categoria

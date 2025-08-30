@@ -8,9 +8,10 @@ const router = express.Router();
 // Listar doações com filtro por período
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const { period = 'all', campaign, church, page = 1, limit = 20 } = req.query;
+    const { period = 'all', campaign, church, donor, page = 1, limit = 20 } = req.query;
     const query = {};
     if (church) query.church = church;
+    if (donor) query.donor = donor;
 
     if (campaign) query.campaign = campaign;
 

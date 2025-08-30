@@ -41,6 +41,7 @@ const postRoutes = require('./routes/posts');
 const notificationRoutes = require('./routes/notifications');
 const uploadRoutes = require('./routes/upload');
 const analyticsRoutes = require('./routes/analytics');
+const devotionalsRoutes = require('./routes/devotionals');
 let premiumRoutes;
 try { premiumRoutes = require('./routes/premium'); } catch (_) { premiumRoutes = express.Router(); }
 
@@ -57,6 +58,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/premium', premiumRoutes);
+app.use('/api/devotionals', devotionalsRoutes);
 
 // Rota de health check
 app.get('/health', (req, res) => {

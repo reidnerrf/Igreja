@@ -10,7 +10,25 @@ router.get('/', async (req, res) => {
     const { period = 'all', platform, church, page = 1, limit = 20 } = req.query;
     const query = {};
     if (platform) query.platform = platform;
-    if (church) query.church = church;
+    if (church) {
+      if (typeof church === 'string' && church.includes(',')) {
+        query.church = { $in: church.split(',').map(id => id.trim()) };
+      } else {
+        query.church = church;
+      }
+    } else if (req.query.following === 'true' && req.headers.authorization) {
+      try {
+        const authHeader = req.headers.authorization;
+        const token = authHeader.split(' ')[1];
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+        const User = require('../models/User');
+        const me = await User.findById(decoded.userId).select('followedChurches');
+        if (me && me.followedChurches && me.followedChurches.length > 0) {
+          query.church = { $in: me.followedChurches };
+        }
+      } catch (e) {}
+    }
     if (period !== 'all') {
       const now = new Date();
       let from = new Date(0);
