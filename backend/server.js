@@ -41,7 +41,8 @@ const postRoutes = require('./routes/posts');
 const notificationRoutes = require('./routes/notifications');
 const uploadRoutes = require('./routes/upload');
 const analyticsRoutes = require('./routes/analytics');
-const premiumRoutes = require('./routes/premium');
+let premiumRoutes;
+try { premiumRoutes = require('./routes/premium'); } catch (_) { premiumRoutes = express.Router(); }
 
 // Usar rotas
 app.use('/api/auth', authRoutes);
