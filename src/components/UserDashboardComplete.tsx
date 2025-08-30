@@ -19,6 +19,8 @@ import { ComputerVision } from './ai/ComputerVision';
 import { AntiFraudSystem } from './ai/AntiFraudSystem';
 import { DeepPersonalization } from './ai/DeepPersonalization';
 import { ContinuousEvaluation } from './ai/ContinuousEvaluation';
+import { CalendarIntegration } from './CalendarIntegration';
+import { GeofencingSystem } from './GeofencingSystem';
 import {
   MapPin,
   Calendar,
@@ -266,6 +268,15 @@ export function UserDashboard({ onLogout }: UserDashboardProps) {
                 
                 <div className="grid grid-cols-1 gap-6">
                   <AntiFraudSystem userType="user" />
+                </div>
+              </div>
+              
+              {/* Funcionalidades Avançadas */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-green-600">Funcionalidades Avançadas</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <CalendarIntegration userType="user" />
+                  <GeofencingSystem userType="user" />
                 </div>
               </div>
             </div>
