@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { PremiumModal } from '../../components/modals/PremiumModal';
+import { useNavigation } from '@react-navigation/native';
 
 interface ChurchMoreScreenProps {
   onLogout: () => void;
@@ -21,6 +22,7 @@ interface ChurchMoreScreenProps {
 export function ChurchMoreScreen({ onLogout }: ChurchMoreScreenProps) {
   const { colors, theme, setTheme } = useTheme();
   const { user } = useAuth();
+  const navigation = useNavigation<any>();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [notifications, setNotifications] = useState(true);
 
@@ -68,6 +70,24 @@ export function ChurchMoreScreen({ onLogout }: ChurchMoreScreenProps) {
         break;
       case 'notifications':
         setNotifications(!notifications);
+        break;
+      case 'prayers':
+        navigation.navigate('ChurchPrayers');
+        break;
+      case 'announcements':
+        navigation.navigate('ChurchAnnouncements');
+        break;
+      case 'feed':
+        navigation.navigate('ChurchFeed');
+        break;
+      case 'chat':
+        navigation.navigate('ChurchChat');
+        break;
+      case 'raffles':
+        navigation.navigate('ChurchRaffles');
+        break;
+      case 'payment':
+        navigation.navigate('ChurchPayments');
         break;
       default:
         Alert.alert('Em Desenvolvimento', `Funcionalidade "${itemId}" será implementada em breve`);

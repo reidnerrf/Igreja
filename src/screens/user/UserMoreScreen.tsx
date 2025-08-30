@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { PremiumModal } from '../../components/modals/PremiumModal';
+import { useNavigation } from '@react-navigation/native';
 
 interface UserMoreScreenProps {
   onLogout: () => void;
@@ -21,6 +22,7 @@ interface UserMoreScreenProps {
 export function UserMoreScreen({ onLogout }: UserMoreScreenProps) {
   const { colors, theme, setTheme } = useTheme();
   const { user } = useAuth();
+  const navigation = useNavigation<any>();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [notifications, setNotifications] = useState(true);
 
@@ -65,6 +67,24 @@ export function UserMoreScreen({ onLogout }: UserMoreScreenProps) {
         break;
       case 'notifications':
         setNotifications(!notifications);
+        break;
+      case 'prayers':
+        navigation.navigate('MyPrayers');
+        break;
+      case 'donations':
+        navigation.navigate('DonationHistory');
+        break;
+      case 'raffles':
+        navigation.navigate('MyRaffles');
+        break;
+      case 'feed':
+        navigation.navigate('MyPosts');
+        break;
+      case 'profile':
+        navigation.navigate('UserProfile');
+        break;
+      case 'privacy':
+        navigation.navigate('PrivacySettings');
         break;
       default:
         Alert.alert('Em Desenvolvimento', `Funcionalidade "${itemId}" será implementada em breve`);
