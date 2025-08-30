@@ -16,6 +16,8 @@ import { useTheme } from './ThemeProvider';
 import { PremiumBadge } from './PremiumBadge';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { BottomNavigation } from './BottomNavigation';
+import { AgendaComponent } from './AgendaComponent';
+import { LiveStreamComponent } from './LiveStreamComponent';
 import {
   BarChart3,
   Calendar,
@@ -289,36 +291,15 @@ export function ChurchDashboard({ onLogout }: ChurchDashboardProps) {
 
           {/* Outras abas aqui */}
           <TabsContent value="agenda">
-            <Card>
-              <CardHeader>
-                <CardTitle>Agenda de Eventos</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Funcionalidade de agenda em desenvolvimento...</p>
-              </CardContent>
-            </Card>
+            <AgendaComponent userType="church" churchName="Igreja Batista Central" />
           </TabsContent>
 
           <TabsContent value="transmissoes">
-            <Card>
-              <CardHeader>
-                <CardTitle>Transmissões ao Vivo</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Funcionalidade de transmissões em desenvolvimento...</p>
-              </CardContent>
-            </Card>
+            <LiveStreamComponent userType="church" churchId="church1" churchName="Igreja Batista Central" />
           </TabsContent>
 
           <TabsContent value="doacoes">
-            <Card>
-              <CardHeader>
-                <CardTitle>Gestão de Doações</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Funcionalidade de doações em desenvolvimento...</p>
-              </CardContent>
-            </Card>
+            <DonationComponent userType="church" churchId="church1" churchName="Igreja Batista Central" />
           </TabsContent>
 
         </Tabs>
