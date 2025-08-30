@@ -54,6 +54,64 @@ router.post('/campaigns', authenticateToken, requireChurch, async (req, res) => 
   }
 });
 
+// Listar campanhas
+router.get('/campaigns', authenticateToken, async (req, res) => {
+  try {
+    const { church, status, page = 1, limit = 20 } = req.query;
+    const query = {};
+    if (church) query.church = church;
+    if (status) query.status = status;
+    const campaigns = await DonationCampaign.find(query)
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit))
+      .skip((parseInt(page) - 1) * parseInt(limit));
+    const total = await DonationCampaign.countDocuments(query);
+    res.json({ success: true, campaigns, pagination: { page: parseInt(page), limit: parseInt(limit), total } });
+  } catch (error) {
+    console.error('Erro ao listar campanhas:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Obter campanha por ID
+router.get('/campaigns/:id', authenticateToken, async (req, res) => {
+  try {
+    const campaign = await DonationCampaign.findById(req.params.id);
+    if (!campaign) return res.status(404).json({ error: 'Campanha não encontrada' });
+    res.json({ success: true, campaign });
+  } catch (error) {
+    console.error('Erro ao obter campanha:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Atualizar campanha
+router.put('/campaigns/:id', authenticateToken, requireChurch, async (req, res) => {
+  try {
+    const campaign = await DonationCampaign.findOne({ _id: req.params.id, church: req.user.userId });
+    if (!campaign) return res.status(404).json({ error: 'Campanha não encontrada' });
+    Object.assign(campaign, req.body);
+    await campaign.save();
+    res.json({ success: true, campaign });
+  } catch (error) {
+    console.error('Erro ao atualizar campanha:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Excluir campanha
+router.delete('/campaigns/:id', authenticateToken, requireChurch, async (req, res) => {
+  try {
+    const campaign = await DonationCampaign.findOne({ _id: req.params.id, church: req.user.userId });
+    if (!campaign) return res.status(404).json({ error: 'Campanha não encontrada' });
+    await DonationCampaign.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: 'Campanha removida' });
+  } catch (error) {
+    console.error('Erro ao excluir campanha:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // Criar doação (processamento simplificado)
 router.post('/', authenticateToken, async (req, res) => {
   try {

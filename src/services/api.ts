@@ -154,6 +154,23 @@ class ApiService {
     });
   }
 
+  async listDonationCampaigns(filters?: any) {
+    const params = new URLSearchParams(filters || {}).toString();
+    return this.request(`/donations/campaigns?${params}`);
+  }
+
+  async getDonationCampaign(id: string) {
+    return this.request(`/donations/campaigns/${id}`);
+  }
+
+  async updateDonationCampaign(id: string, data: any) {
+    return this.request(`/donations/campaigns/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+
+  async deleteDonationCampaign(id: string) {
+    return this.request(`/donations/campaigns/${id}`, { method: 'DELETE' });
+  }
+
   async processDonation(donationId: string, paymentData: any) {
     return this.request(`/donations/${donationId}/process`, {
       method: 'POST',

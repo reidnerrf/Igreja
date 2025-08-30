@@ -13,6 +13,7 @@ import MapView, { Marker, Callout } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useTheme } from '../../contexts/ThemeContext';
+import { apiService } from '../../services/api';
 
 export function UserMapScreen() {
   const { colors } = useTheme();
@@ -86,15 +87,14 @@ export function UserMapScreen() {
     setShowChurchModal(true);
   };
 
-  const handleFollowChurch = (churchId: number) => {
-    Alert.alert(
-      'Seguir Igreja',
-      'Você receberá notificações sobre eventos e avisos desta igreja.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Seguir', onPress: () => console.log('Seguindo igreja:', churchId) }
-      ]
-    );
+  const handleFollowChurch = async (churchId: string | number) => {
+    try {
+      await apiService.followChurch(String(churchId));
+      Alert.alert('Seguindo', 'Você receberá notificações desta igreja');
+      setShowChurchModal(false);
+    } catch (e) {
+      Alert.alert('Erro', 'Não foi possível seguir agora');
+    }
   };
 
   const openDirections = (church: any) => {
