@@ -10,6 +10,7 @@ import { Progress } from './ui/progress';
 import { Church, User, MapPin, Phone, Mail, Instagram, DollarSign, Image as ImageIcon, ArrowLeft, Lock } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { API_BASE_URL } from '../services/api';
+import { toast } from 'sonner';
 
 interface DetailedSignupFormProps {
   userType: 'church' | 'user';
@@ -21,6 +22,7 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   
   const [formData, setFormData] = useState({
     name: '',
@@ -37,9 +39,23 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
   const totalSteps = userType === 'church' ? 3 : 2;
   const progress = (step / totalSteps) * 100;
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const maskPhone = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 11);
+    if (digits.length <= 10) {
+      return digits.replace(/(\d{0,2})(\d{0,4})(\d{0,4})/, (m, a, b, c) => {
+        return [a && `(${a})`, b, c && `-${c}`].filter(Boolean).join(' ');
+      });
+    }
+    return digits.replace(/(\d{0,2})(\d{0,5})(\d{0,4})/, (m, a, b, c) => {
+      return [a && `(${a})`, b, c && `-${c}`].filter(Boolean).join(' ');
+    });
+  };
+
   const handleNext = () => {
-    if (step < totalSteps) {
-      setStep(step + 1);
+    if (validateStep(step)) {
+      if (step < totalSteps) setStep(step + 1);
     }
   };
 
@@ -51,7 +67,17 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
     }
   };
 
+  const setFieldError = (field: string, message: string) => {
+    setErrors(prev => ({ ...prev, [field]: message }));
+  };
+
+  const clearFieldError = (field: string) => {
+    setErrors(prev => { const { [field]: _, ...rest } = prev; return rest; });
+  };
+
   const handleInputChange = (field: string, value: string) => {
+    if (field === 'phone') value = maskPhone(value);
+    clearFieldError(field);
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -71,7 +97,27 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
     }
   };
 
+  const validateStep = (currentStep: number) => {
+    const e: Record<string, string> = {};
+    if (currentStep === 1) {
+      if (!formData.name) e.name = 'Informe o nome';
+      if (!formData.email || !emailRegex.test(formData.email)) e.email = 'Email inválido';
+      if (!formData.password || formData.password.length < 6) e.password = 'Senha deve ter 6+ caracteres';
+      if (userType === 'church' && !formData.address) e.address = 'Informe o endereço';
+    } else if (currentStep === 2) {
+      if (userType === 'church') {
+        if (!formData.denomination) e.denomination = 'Selecione a denominação';
+        if (!formData.phone) e.phone = 'Informe o telefone';
+      }
+    } else if (currentStep === 3 && userType === 'church') {
+      if (!formData.pixKey) e.pixKey = 'Informe a chave PIX';
+    }
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
   const handleSubmit = async () => {
+    if (!validateStep(step)) return;
     setIsLoading(true);
     try {
       const payload: any = {
@@ -94,11 +140,15 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error('Falha no cadastro');
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || 'Falha no cadastro');
+      }
+      toast.success('Cadastro realizado com sucesso!');
       onComplete();
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert('Não foi possível finalizar o cadastro.');
+      toast.error(e?.message || 'Não foi possível finalizar o cadastro.');
     } finally {
       setIsLoading(false);
     }
@@ -106,10 +156,10 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
 
   const canProceed = () => {
     if (step === 1) {
-      return formData.name && formData.email && formData.password && formData.address;
+      return formData.name && emailRegex.test(formData.email) && formData.password.length >= 6 && (userType !== 'church' || !!formData.address);
     }
     if (step === 2) {
-      if (userType === 'church') return formData.denomination && formData.phone;
+      if (userType === 'church') return !!formData.denomination && !!formData.phone;
       return true;
     }
     if (step === 3 && userType === 'church') {
@@ -140,7 +190,6 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {/* Etapa 1: Informações Básicas */}
             {step === 1 && (
               <div className="space-y-4">
                 <div className="text-center mb-6">
@@ -161,6 +210,7 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
                     placeholder={userType === 'church' ? 'Ex: Igreja Batista Central' : 'Seu nome completo'}
                     required
                   />
+                  {errors.name && <p className="text-xs text-red-600">{errors.name}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -176,6 +226,7 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
                       required
                     />
                   </div>
+                  {errors.email && <p className="text-xs text-red-600">{errors.email}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -192,6 +243,7 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
                       required
                     />
                   </div>
+                  {errors.password && <p className="text-xs text-red-600">{errors.password}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -207,11 +259,11 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
                       required={userType==='church'}
                     />
                   </div>
+                  {errors.address && <p className="text-xs text-red-600">{errors.address}</p>}
                 </div>
               </div>
             )}
 
-            {/* Etapa 2: Contato e Denominação */}
             {step === 2 && (
               <div className="space-y-4">
                 <div className="text-center mb-6">
@@ -242,6 +294,7 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
                           <SelectItem value="outra">Outra</SelectItem>
                         </SelectContent>
                       </Select>
+                      {errors.denomination && <p className="text-xs text-red-600">{errors.denomination}</p>}
                     </div>
 
                     <div className="space-y-2">
@@ -257,9 +310,9 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
                           required
                         />
                       </div>
+                      {errors.phone && <p className="text-xs text-red-600">{errors.phone}</p>}
                     </div>
 
-                    {/* Upload de foto de perfil */}
                     <div className="space-y-2">
                       <Label htmlFor="profile-image">Foto de Perfil</Label>
                       <div className="flex items-center space-x-4">
@@ -299,7 +352,6 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
               </div>
             )}
 
-            {/* Etapa 3: Informações Específicas da Igreja */}
             {step === 3 && userType === 'church' && (
               <div className="space-y-4">
                 <div className="text-center mb-6">
@@ -322,6 +374,7 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
                       required
                     />
                   </div>
+                  {errors.pixKey && <p className="text-xs text-red-600">{errors.pixKey}</p>}
                   <p className="text-xs text-muted-foreground">
                     Esta chave será usada para receber doações online
                   </p>
@@ -343,7 +396,6 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
               </div>
             )}
 
-            {/* Botões de Navegação */}
             <div className="flex justify-between pt-6">
               <Button
                 variant="outline"
@@ -374,7 +426,6 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
               </div>
             </div>
 
-            {/* Indicadores de progresso */}
             <div className="flex justify-center space-x-2 pt-4">
               {Array.from({ length: totalSteps }, (_, i) => (
                 <div
