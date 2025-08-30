@@ -87,6 +87,10 @@ class ApiService {
     return this.request(`/events?${params}`);
   }
 
+  getEventIcsUrl(eventId: string) {
+    return `${API_BASE_URL}/events-ics/${eventId}.ics`;
+  }
+
   async createEvent(eventData: any) {
     return this.request('/events', {
       method: 'POST',
@@ -176,6 +180,19 @@ class ApiService {
       method: 'POST',
       body: JSON.stringify(paymentData),
     });
+  }
+
+  getPublicCampaignUrl(slug: string) {
+    return `${API_BASE_URL}/donations/public/${slug}`;
+  }
+
+  // PIX
+  async generatePix(amount: number, church: string, campaign?: string, message?: string) {
+    return this.request('/pix/generate', { method: 'POST', body: JSON.stringify({ amount, church, campaign, message }) });
+  }
+
+  async getPixStatus(txid: string) {
+    return this.request(`/pix/status/${txid}`);
   }
 
   // Raffles

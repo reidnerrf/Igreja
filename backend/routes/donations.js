@@ -43,10 +43,25 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
+// helper slug
+function slugify(text) {
+  return String(text || '')
+    .normalize('NFKD')
+    .replace(/[^\w\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-').toLowerCase();
+}
+
 // Criar campanha
 router.post('/campaigns', authenticateToken, requireChurch, async (req, res) => {
   try {
-    const campaign = await DonationCampaign.create({ ...req.body, church: req.user.userId });
+    const baseSlug = slugify(req.body.title);
+    let slug = baseSlug;
+    let i = 1;
+    while (await DonationCampaign.findOne({ slug })) {
+      slug = `${baseSlug}-${i++}`;
+    }
+    const campaign = await DonationCampaign.create({ ...req.body, church: req.user.userId, slug });
     res.status(201).json({ success: true, campaign });
   } catch (error) {
     console.error('Erro ao criar campanha:', error);
@@ -82,6 +97,18 @@ router.get('/campaigns/:id', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Erro ao obter campanha:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Página pública por slug
+router.get('/public/:slug', async (req, res) => {
+  try {
+    const campaign = await DonationCampaign.findOne({ slug: req.params.slug, status: { $in: ['active','completed'] } });
+    if (!campaign) return res.status(404).send('Campanha não encontrada');
+    res.send(`<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>${campaign.title}</title></head><body><div style="max-width:680px;margin:40px auto;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu;line-height:1.5;padding:0 16px"><h1>${campaign.title}</h1><p>${campaign.description || ''}</p><p><strong>Meta:</strong> R$ ${campaign.goal?.toLocaleString?.()}</p><p><strong>Arrecadado:</strong> R$ ${campaign.raised?.toLocaleString?.()}</p><p><img alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${req.protocol}://${req.get('host')}/api/donations/public/${campaign.slug}`)}"/></p><p><small>Compartilhe este link: ${req.protocol}://${req.get('host')}/api/donations/public/${campaign.slug}</small></p></div></body></html>`);
+  } catch (error) {
+    console.error('Erro ao gerar página pública:', error);
+    res.status(500).send('Erro interno do servidor');
   }
 });
 

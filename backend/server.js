@@ -46,6 +46,8 @@ const uploadRoutes = require('./routes/upload');
 const analyticsRoutes = require('./routes/analytics');
 const devotionalsRoutes = require('./routes/devotionals');
 const chatRoutes = require('./routes/chat');
+const pixRoutes = require('./routes/pix');
+const eventsIcsRoutes = require('./routes/events-ics');
 let premiumRoutes;
 try { premiumRoutes = require('./routes/premium'); } catch (_) { premiumRoutes = express.Router(); }
 
@@ -64,6 +66,8 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/premium', premiumRoutes);
 app.use('/api/devotionals', devotionalsRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/pix', pixRoutes);
+app.use('/api/events-ics', eventsIcsRoutes);
 
 // Rota de health check
 app.get('/health', (req, res) => {
