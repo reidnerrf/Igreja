@@ -19,7 +19,8 @@ import {
   MapPin,
   User,
   BarChart3,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Brain
 } from 'lucide-react';
 
 interface BottomNavigationProps {
@@ -45,13 +46,15 @@ export function BottomNavigation({
         { id: 'dashboard', label: 'Home', icon: Home },
         { id: 'agenda', label: 'Eventos', icon: Calendar },
         { id: 'transmissoes', label: 'Live', icon: Radio },
-        { id: 'doacoes', label: 'Doações', icon: DollarSign }
+        { id: 'doacoes', label: 'Doações', icon: DollarSign },
+        { id: 'ia', label: 'IA', icon: Brain }
       ]
     : [
         { id: 'dashboard', label: 'Home', icon: Home },
         { id: 'mapa', label: 'Igrejas', icon: MapPin },
         { id: 'agenda', label: 'Eventos', icon: Calendar },
-        { id: 'transmissoes', label: 'Lives', icon: Radio }
+        { id: 'transmissoes', label: 'Lives', icon: Radio },
+        { id: 'ia', label: 'IA', icon: Brain }
       ];
 
   // Definir itens do menu expandido baseado no tipo de usuário

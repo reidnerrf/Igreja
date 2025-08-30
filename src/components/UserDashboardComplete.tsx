@@ -8,6 +8,13 @@ import { Switch } from './ui/switch';
 import { Progress } from './ui/progress';
 import { useTheme } from './ThemeProvider';
 import { BottomNavigation } from './BottomNavigation';
+import { MapComponent } from './MapComponent';
+import { AgendaComponent } from './AgendaComponent';
+import { LiveStreamComponent } from './LiveStreamComponent';
+import { DonationComponent } from './DonationComponent';
+import { NLPProcessor } from './ai/NLPProcessor';
+import { H3Deduplication } from './ai/H3Deduplication';
+import { RecommendationEngine } from './ai/RecommendationEngine';
 import {
   MapPin,
   Calendar,
@@ -194,45 +201,15 @@ export function UserDashboard({ onLogout }: UserDashboardProps) {
 
           {/* Outras abas simplificadas */}
           <TabsContent value="mapa">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <MapPin className="w-5 h-5" />
-                  <span>Mapa de Igrejas</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Funcionalidade de mapa em desenvolvimento...</p>
-              </CardContent>
-            </Card>
+            <MapComponent />
           </TabsContent>
 
           <TabsContent value="agenda">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Calendar className="w-5 h-5" />
-                  <span>Minha Agenda</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Funcionalidade de agenda em desenvolvimento...</p>
-              </CardContent>
-            </Card>
+            <AgendaComponent userType="user" />
           </TabsContent>
 
           <TabsContent value="transmissoes">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Radio className="w-5 h-5" />
-                  <span>Transmissões ao Vivo</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Funcionalidade de transmissões em desenvolvimento...</p>
-              </CardContent>
-            </Card>
+            <LiveStreamComponent userType="user" />
           </TabsContent>
 
           <TabsContent value="oracoes">
@@ -250,17 +227,27 @@ export function UserDashboard({ onLogout }: UserDashboardProps) {
           </TabsContent>
 
           <TabsContent value="doacoes">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <DollarSign className="w-5 h-5" />
-                  <span>Doações</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Funcionalidade de doações em desenvolvimento...</p>
-              </CardContent>
-            </Card>
+            <DonationComponent userType="user" />
+          </TabsContent>
+
+          <TabsContent value="ia">
+            <div className="space-y-6">
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold mb-2">Inteligência Artificial</h2>
+                <p className="text-muted-foreground">
+                  Ferramentas inteligentes para encontrar e conectar com igrejas
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <NLPProcessor />
+                <RecommendationEngine />
+              </div>
+              
+              <div className="grid grid-cols-1 gap-6">
+                <H3Deduplication />
+              </div>
+            </div>
           </TabsContent>
 
         </Tabs>
