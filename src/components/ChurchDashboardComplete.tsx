@@ -22,6 +22,10 @@ import { NLPProcessor } from './ai/NLPProcessor';
 import { H3Deduplication } from './ai/H3Deduplication';
 import { RecommendationEngine } from './ai/RecommendationEngine';
 import { KYCVerification } from './ai/KYCVerification';
+import { ComputerVision } from './ai/ComputerVision';
+import { AntiFraudSystem } from './ai/AntiFraudSystem';
+import { DeepPersonalization } from './ai/DeepPersonalization';
+import { ContinuousEvaluation } from './ai/ContinuousEvaluation';
 import {
   BarChart3,
   Calendar,
@@ -309,48 +313,66 @@ export function ChurchDashboard({ onLogout }: ChurchDashboardProps) {
           <TabsContent value="ia">
             <div className="space-y-6">
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold mb-2">Inteligência Artificial</h2>
+                <h2 className="text-2xl font-bold mb-2">Inteligência Artificial Avançada</h2>
                 <p className="text-muted-foreground">
-                  Ferramentas avançadas para otimizar sua gestão eclesiástica
+                  Ferramentas de IA de última geração para otimizar sua gestão eclesiástica
                 </p>
               </div>
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <NLPProcessor />
-                <H3Deduplication />
+              {/* Fase 2 - IA 1.0 */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-blue-600">Fase 2 - IA Básica</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <NLPProcessor />
+                  <H3Deduplication />
+                </div>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <RecommendationEngine />
+                  <KYCVerification 
+                    churchProfile={{
+                      id: "church1",
+                      name: "Igreja Batista Central",
+                      denomination: "Batista",
+                      address: "Rua das Flores, 123",
+                      city: "São Paulo",
+                      state: "SP",
+                      phone: "(11) 99999-9999",
+                      email: "contato@igrejabatista.com",
+                      website: "www.igrejabatista.com",
+                      foundedYear: 1980,
+                      taxId: "12.345.678/0001-90",
+                      registrationNumber: "REG-001",
+                      leadership: [
+                        {
+                          id: "leader1",
+                          name: "Pastor João Silva",
+                          role: "Pastor Principal",
+                          email: "pastor@igrejabatista.com",
+                          phone: "(11) 99999-9998"
+                        }
+                      ],
+                      isVerified: true,
+                      verificationLevel: "premium",
+                      verificationExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
+                    }}
+                    userType="church"
+                  />
+                </div>
               </div>
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <RecommendationEngine />
-                <KYCVerification 
-                  churchProfile={{
-                    id: "church1",
-                    name: "Igreja Batista Central",
-                    denomination: "Batista",
-                    address: "Rua das Flores, 123",
-                    city: "São Paulo",
-                    state: "SP",
-                    phone: "(11) 99999-9999",
-                    email: "contato@igrejabatista.com",
-                    website: "www.igrejabatista.com",
-                    foundedYear: 1980,
-                    taxId: "12.345.678/0001-90",
-                    registrationNumber: "REG-001",
-                    leadership: [
-                      {
-                        id: "leader1",
-                        name: "Pastor João Silva",
-                        role: "Pastor Principal",
-                        email: "pastor@igrejabatista.com",
-                        phone: "(11) 99999-9998"
-                      }
-                    ],
-                    isVerified: true,
-                    verificationLevel: "premium",
-                    verificationExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
-                  }}
-                  userType="church"
-                />
+              {/* Fase 3 - IA Avançada */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-purple-600">Fase 3 - IA Avançada</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <ComputerVision userType="church" />
+                  <AntiFraudSystem userType="church" />
+                </div>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <DeepPersonalization userType="church" />
+                  <ContinuousEvaluation userType="church" />
+                </div>
               </div>
             </div>
           </TabsContent>

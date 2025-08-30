@@ -15,6 +15,10 @@ import { DonationComponent } from './DonationComponent';
 import { NLPProcessor } from './ai/NLPProcessor';
 import { H3Deduplication } from './ai/H3Deduplication';
 import { RecommendationEngine } from './ai/RecommendationEngine';
+import { ComputerVision } from './ai/ComputerVision';
+import { AntiFraudSystem } from './ai/AntiFraudSystem';
+import { DeepPersonalization } from './ai/DeepPersonalization';
+import { ContinuousEvaluation } from './ai/ContinuousEvaluation';
 import {
   MapPin,
   Calendar,
@@ -233,19 +237,36 @@ export function UserDashboard({ onLogout }: UserDashboardProps) {
           <TabsContent value="ia">
             <div className="space-y-6">
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold mb-2">Inteligência Artificial</h2>
+                <h2 className="text-2xl font-bold mb-2">Inteligência Artificial Avançada</h2>
                 <p className="text-muted-foreground">
-                  Ferramentas inteligentes para encontrar e conectar com igrejas
+                  Ferramentas de IA de última geração para encontrar e conectar com igrejas
                 </p>
               </div>
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <NLPProcessor />
-                <RecommendationEngine />
+              {/* Fase 2 - IA 1.0 */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-blue-600">Fase 2 - IA Básica</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <NLPProcessor />
+                  <RecommendationEngine />
+                </div>
+                
+                <div className="grid grid-cols-1 gap-6">
+                  <H3Deduplication />
+                </div>
               </div>
               
-              <div className="grid grid-cols-1 gap-6">
-                <H3Deduplication />
+              {/* Fase 3 - IA Avançada */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-purple-600">Fase 3 - IA Avançada</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <ComputerVision userType="user" />
+                  <DeepPersonalization userType="user" />
+                </div>
+                
+                <div className="grid grid-cols-1 gap-6">
+                  <AntiFraudSystem userType="user" />
+                </div>
               </div>
             </div>
           </TabsContent>
