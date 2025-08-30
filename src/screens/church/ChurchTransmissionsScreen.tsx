@@ -14,6 +14,8 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { VideoPlayer } from '../../components/VideoPlayer';
 import { CreateTransmissionModal } from '../../components/modals/CreateTransmissionModal';
+import { useTransmissions } from '../../hooks/useApi';
+import { apiService } from '../../services/api';
 
 export function ChurchTransmissionsScreen() {
   const { colors } = useTheme();
@@ -21,44 +23,8 @@ export function ChurchTransmissionsScreen() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   
-  const [transmissions, setTransmissions] = useState([
-    {
-      id: 1,
-      title: 'Culto Dominical - Ao Vivo',
-      description: 'Transmissão ao vivo do culto dominical',
-      thumbnail: 'https://images.unsplash.com/photo-1507692049790-de58290a4334?w=300&h=200&fit=crop',
-      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      platform: 'youtube',
-      isLive: true,
-      viewers: 245,
-      duration: null,
-      createdAt: '2025-01-12T19:00:00Z'
-    },
-    {
-      id: 2,
-      title: 'Estudo Bíblico - João 3:16',
-      description: 'Estudo sobre o amor de Deus',
-      thumbnail: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=300&h=200&fit=crop',
-      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      platform: 'youtube',
-      isLive: false,
-      viewers: 89,
-      duration: '45:30',
-      createdAt: '2025-01-10T20:00:00Z'
-    },
-    {
-      id: 3,
-      title: 'Louvor e Adoração',
-      description: 'Momento de louvor com o ministério',
-      thumbnail: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=200&fit=crop',
-      url: 'https://www.facebook.com/watch?v=123456789',
-      platform: 'facebook',
-      isLive: false,
-      viewers: 156,
-      duration: '32:15',
-      createdAt: '2025-01-08T19:30:00Z'
-    }
-  ]);
+  const { data: transmissionsData, loading, error, refetch } = useTransmissions();
+  const transmissions = transmissionsData || [];
 
   const handleCreateTransmission = () => {
     if (!user?.isPremium) {
@@ -337,7 +303,7 @@ export function ChurchTransmissionsScreen() {
         <View style={styles.transmissionActions}>
           <TouchableOpacity style={styles.actionButton}>
             <Ionicons name="create" size={16} color={colors.primary} />
-            <Text style={[styles.actionButtonText, { color: colors.primary }]}>
+            <Text style={[styles.actionButtonText, { color: colors.primary }]}> 
               Editar
             </Text>
           </TouchableOpacity>
@@ -409,9 +375,10 @@ export function ChurchTransmissionsScreen() {
       <CreateTransmissionModal
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        onSubmit={(transmissionData) => {
-          console.log('Nova transmissão:', transmissionData);
+        onSubmit={async (transmissionData) => {
+          await apiService.createTransmission(transmissionData);
           setShowCreateModal(false);
+          refetch();
         }}
       />
 

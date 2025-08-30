@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 import { CreateAnnouncementModal } from '../../components/modals/CreateAnnouncementModal';
+import { apiService } from '../../services/api';
+import { notificationService } from '../../services/notificationService';
 
 export function ChurchAnnouncementsScreen() {
   const { colors } = useTheme();
@@ -41,7 +43,14 @@ export function ChurchAnnouncementsScreen() {
           </View>
         ))}
       </ScrollView>
-      <CreateAnnouncementModal visible={showModal} onClose={() => setShowModal(false)} onSubmit={() => setShowModal(false)} />
+      <CreateAnnouncementModal visible={showModal} onClose={() => setShowModal(false)} onSubmit={async (payload) => {
+        await apiService.createPost({ ...payload, type: 'announcement' });
+        const token = await notificationService.getExpoPushToken();
+        if (token) {
+          await notificationService.scheduleLocalNotification('Novo aviso', payload.title);
+        }
+        setShowModal(false);
+      }} />
     </SafeAreaView>
   );
 }

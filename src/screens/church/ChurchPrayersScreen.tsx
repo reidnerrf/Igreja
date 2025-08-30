@@ -5,10 +5,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 import { PremiumBadge } from '../../components/PremiumBadge';
 import { CreatePrayerModal } from '../../components/modals/CreatePrayerModal';
+import { usePrayers } from '../../hooks/useApi';
+import { apiService } from '../../services/api';
 
 export function ChurchPrayersScreen() {
   const { colors } = useTheme();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const { data: prayersData, loading, error, refetch } = usePrayers();
+  const prayers = prayersData || [];
 
   const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
@@ -26,6 +30,12 @@ export function ChurchPrayersScreen() {
     smallButtonText: { color: colors.foreground, fontSize: 12, fontWeight: '500' }
   });
 
+  const markStatus = async (id: string, status: 'pending' | 'praying' | 'answered') => {
+    await apiService.updatePrayerStatus(id, status);
+    refetch();
+    Alert.alert('Status atualizado', `Marcado como ${status === 'answered' ? 'Atendido' : 'Em oração'}`);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -38,15 +48,15 @@ export function ChurchPrayersScreen() {
         </View>
       </View>
       <ScrollView style={styles.content}>
-        {[{ id: '1', title: 'Saúde do Sr. José', status: 'Em oração' }, { id: '2', title: 'Emprego para Maria', status: 'Atendido' }].map(item => (
-          <View key={item.id} style={styles.item}>
-            <Text style={styles.itemTitle}>{item.title}</Text>
-            <Text style={styles.itemMeta}>Status: {item.status}</Text>
+        {prayers.map((item: any) => (
+          <View key={item.id || item._id} style={styles.item}>
+            <Text style={styles.itemTitle}>{item.title || item.request}</Text>
+            <Text style={styles.itemMeta}>Status: {item.status === 'answered' ? 'Atendido' : 'Em oração'}</Text>
             <View style={styles.itemActions}>
-              <TouchableOpacity style={styles.smallButton} onPress={() => Alert.alert('Status', 'Marcado como Em oração')}>
+              <TouchableOpacity style={styles.smallButton} onPress={() => markStatus(item.id || item._id, 'praying')}>
                 <Text style={styles.smallButtonText}>Em oração</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.smallButton} onPress={() => Alert.alert('Status', 'Marcado como Atendido')}>
+              <TouchableOpacity style={styles.smallButton} onPress={() => markStatus(item.id || item._id, 'answered')}>
                 <Text style={styles.smallButtonText}>Atendido</Text>
               </TouchableOpacity>
             </View>
@@ -54,7 +64,7 @@ export function ChurchPrayersScreen() {
         ))}
         <PremiumBadge />
       </ScrollView>
-      <CreatePrayerModal visible={showCreateModal} onClose={() => setShowCreateModal(false)} onSubmit={() => setShowCreateModal(false)} />
+      <CreatePrayerModal visible={showCreateModal} onClose={() => setShowCreateModal(false)} onSubmit={async (data) => { await apiService.createPrayer(data); setShowCreateModal(false); refetch(); }} />
     </SafeAreaView>
   );
 }

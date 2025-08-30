@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = __DEV__ ? 'http://localhost:3001/api' : 'https://your-api.com/api';
+export const API_BASE_URL = __DEV__ ? 'http://localhost:3001/api' : 'https://your-api.com/api';
 
 class ApiService {
   private async getAuthToken(): Promise<string | null> {

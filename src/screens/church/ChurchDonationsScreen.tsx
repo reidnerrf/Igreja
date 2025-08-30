@@ -12,6 +12,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { CreateDonationModal } from '../../components/modals/CreateDonationModal';
+import { useDonations } from '../../hooks/useApi';
+import { apiService } from '../../services/api';
 
 export function ChurchDonationsScreen() {
   const { colors } = useTheme();
@@ -19,35 +21,8 @@ export function ChurchDonationsScreen() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [filter, setFilter] = useState('all'); // all, today, week, month
   
-  const [donations, setDonations] = useState([
-    {
-      id: 1,
-      amount: 150.00,
-      donor: 'João Silva',
-      method: 'pix',
-      campaign: 'Dízimo',
-      date: '2025-01-12T10:30:00Z',
-      status: 'completed'
-    },
-    {
-      id: 2,
-      amount: 50.00,
-      donor: 'Maria Santos',
-      method: 'card',
-      campaign: 'Reforma da Igreja',
-      date: '2025-01-12T09:15:00Z',
-      status: 'completed'
-    },
-    {
-      id: 3,
-      amount: 200.00,
-      donor: 'Pedro Costa',
-      method: 'pix',
-      campaign: 'Ação Social',
-      date: '2025-01-11T16:45:00Z',
-      status: 'pending'
-    }
-  ]);
+  const { data: donationsData, loading, error, refetch } = useDonations({ filter });
+  const donations = donationsData || [];
 
   const [campaigns, setCampaigns] = useState([
     {
@@ -497,9 +472,10 @@ export function ChurchDonationsScreen() {
       <CreateDonationModal
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        onSubmit={(donationData) => {
-          console.log('Nova campanha:', donationData);
+        onSubmit={async (donationData) => {
+          await apiService.createDonationCampaign(donationData);
           setShowCreateModal(false);
+          refetch();
         }}
       />
     </SafeAreaView>

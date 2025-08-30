@@ -5,10 +5,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 import { FeedCard } from '../../components/FeedCard';
 import { CreatePostModal } from '../../components/modals/CreatePostModal';
+import { usePosts } from '../../hooks/useApi';
+import { apiService } from '../../services/api';
 
 export function ChurchFeedScreen() {
   const { colors } = useTheme();
   const [showModal, setShowModal] = useState(false);
+  const { data: postsData, loading, error, refetch } = usePosts({ scope: 'church' });
+  const posts = postsData || [];
 
   const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
@@ -32,11 +36,11 @@ export function ChurchFeedScreen() {
         </View>
       </View>
       <ScrollView style={styles.content}>
-        {[1,2,3].map(i => (
-          <FeedCard key={i} post={{ id: String(i), author: 'Paróquia', content: 'Momento de fé', likes: 12*i, comments: i }} />
+        {posts.map((post: any) => (
+          <FeedCard key={post.id || post._id} post={post} />
         ))}
       </ScrollView>
-      <CreatePostModal visible={showModal} onClose={() => setShowModal(false)} onSubmit={() => setShowModal(false)} />
+      <CreatePostModal visible={showModal} onClose={() => setShowModal(false)} onSubmit={async (data) => { await apiService.createPost({ ...data, scope: 'church' }); setShowModal(false); refetch(); }} />
     </SafeAreaView>
   );
 }
