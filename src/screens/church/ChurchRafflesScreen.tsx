@@ -6,11 +6,15 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { RaffleCard } from '../../components/RaffleCard';
 import { CreateRaffleModal } from '../../components/modals/CreateRaffleModal';
 import { useAuth } from '../../contexts/AuthContext';
+import { useRaffles } from '../../hooks/useApi';
+import { apiService } from '../../services/api';
 
 export function ChurchRafflesScreen() {
   const { colors } = useTheme();
   const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
+  const { data: rafflesData, loading, error, refetch } = useRaffles({ scope: 'church' });
+  const raffles = rafflesData || [];
 
   const openCreate = () => {
     if (!user?.isPremium) {
@@ -20,6 +24,9 @@ export function ChurchRafflesScreen() {
     setShowModal(true);
   };
 
+  const totalRevenue = raffles.reduce((sum: number, r: any) => sum + (r.price || 0) * (r.soldNumbers || 0), 0);
+  const totalSold = raffles.reduce((sum: number, r: any) => sum + (r.soldNumbers || 0), 0);
+
   const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
     header: { backgroundColor: colors.card, paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.border },
@@ -27,7 +34,11 @@ export function ChurchRafflesScreen() {
     title: { fontSize: 20, fontWeight: 'bold', color: colors.foreground },
     content: { flex: 1, padding: 20 },
     actionButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.primary, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 10 },
-    actionText: { color: colors.primaryForeground, fontWeight: '600', marginLeft: 8 }
+    actionText: { color: colors.primaryForeground, fontWeight: '600', marginLeft: 8 },
+    stats: { flexDirection: 'row', gap: 12, marginBottom: 16 },
+    stat: { flex: 1, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 16, alignItems: 'center' },
+    statValue: { color: colors.foreground, fontWeight: 'bold' },
+    statLabel: { color: colors.mutedForeground, fontSize: 12 }
   });
 
   return (
@@ -42,11 +53,21 @@ export function ChurchRafflesScreen() {
         </View>
       </View>
       <ScrollView style={styles.content}>
-        {[1,2].map(i => (
-          <RaffleCard key={i} raffle={{ id: String(i), title: `Rifa Beneficente ${i}`, price: 10*i, totalNumbers: 100, soldNumbers: 40*i }} />
+        <View style={styles.stats}>
+          <View style={styles.stat}>
+            <Text style={styles.statValue}>R$ {totalRevenue.toLocaleString()}</Text>
+            <Text style={styles.statLabel}>Receita Estimada</Text>
+          </View>
+          <View style={styles.stat}>
+            <Text style={styles.statValue}>{totalSold}</Text>
+            <Text style={styles.statLabel}>Números Vendidos</Text>
+          </View>
+        </View>
+        {(raffles.length > 0 ? raffles : []).map((r: any) => (
+          <RaffleCard key={r.id || r._id} raffle={r} />
         ))}
       </ScrollView>
-      <CreateRaffleModal visible={showModal} onClose={() => setShowModal(false)} onSubmit={() => setShowModal(false)} />
+      <CreateRaffleModal visible={showModal} onClose={() => setShowModal(false)} onSubmit={async (data) => { await apiService.createRaffle(data); setShowModal(false); refetch(); }} />
     </SafeAreaView>
   );
 }

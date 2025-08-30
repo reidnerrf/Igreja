@@ -17,6 +17,8 @@ import { PremiumBadge } from '../../components/PremiumBadge';
 import { CreateEventModal } from '../../components/modals/CreateEventModal';
 import { CreateAnnouncementModal } from '../../components/modals/CreateAnnouncementModal';
 import { CreateDonationModal } from '../../components/modals/CreateDonationModal';
+import { apiService } from '../../services/api';
+import { notificationService } from '../../services/notificationService';
 
 export function ChurchDashboardScreen() {
   const { colors } = useTheme();
@@ -45,10 +47,20 @@ export function ChurchDashboardScreen() {
     { id: 3, title: 'Reunião de Jovens', date: '2025-01-16', time: '19:30', attendees: 120 }
   ]);
 
+  const [analytics, setAnalytics] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (user?.isPremium) {
+      apiService.getAnalytics('church', 'month').then(setAnalytics).catch(() => {});
+    }
+  }, [user?.isPremium]);
+
   const onRefresh = async () => {
     setRefreshing(true);
-    // Simular carregamento de dados
     await new Promise(resolve => setTimeout(resolve, 1000));
+    if (user?.isPremium) {
+      try { setAnalytics(await apiService.getAnalytics('church', 'month')); } catch {}
+    }
     setRefreshing(false);
   };
 
@@ -72,7 +84,7 @@ export function ChurchDashboardScreen() {
           );
           return;
         }
-        // Implementar modal de rifa
+        // Navegação/implementação de rifa pela tela dedicada
         break;
     }
   };
@@ -425,6 +437,29 @@ export function ChurchDashboardScreen() {
           </View>
         </View>
 
+        {/* Analytics Premium */}
+        {user?.isPremium && analytics && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Relatórios (Premium)</Text>
+            </View>
+            <View style={styles.statsGrid}>
+              <View style={styles.statCard}>
+                <Text style={styles.statValue}>{analytics.eventsThisMonth}</Text>
+                <Text style={styles.statLabel}>Eventos no mês</Text>
+              </View>
+              <View style={styles.statCard}>
+                <Text style={styles.statValue}>{analytics.liveViewers || 0}</Text>
+                <Text style={styles.statLabel}>Pico de espectadores</Text>
+              </View>
+              <View style={styles.statCard}>
+                <Text style={styles.statValue}>R$ {analytics.donationsTotal?.toLocaleString?.() || 0}</Text>
+                <Text style={styles.statLabel}>Doações no mês</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
         {/* Próximos Eventos */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -482,26 +517,28 @@ export function ChurchDashboardScreen() {
       <CreateEventModal
         visible={showEventModal}
         onClose={() => setShowEventModal(false)}
-        onSubmit={(eventData) => {
-          console.log('Novo evento:', eventData);
+        onSubmit={async (eventData) => {
+          await apiService.createEvent(eventData);
           setShowEventModal(false);
+          try { await notificationService.scheduleLocalNotification('Novo evento', eventData.title); } catch {}
         }}
       />
 
       <CreateAnnouncementModal
         visible={showAnnouncementModal}
         onClose={() => setShowAnnouncementModal(false)}
-        onSubmit={(announcementData) => {
-          console.log('Novo aviso:', announcementData);
+        onSubmit={async (announcementData) => {
+          await apiService.createPost({ ...announcementData, type: 'announcement' });
           setShowAnnouncementModal(false);
+          try { await notificationService.scheduleLocalNotification('Novo aviso', announcementData.title); } catch {}
         }}
       />
 
       <CreateDonationModal
         visible={showDonationModal}
         onClose={() => setShowDonationModal(false)}
-        onSubmit={(donationData) => {
-          console.log('Nova campanha de doação:', donationData);
+        onSubmit={async (donationData) => {
+          await apiService.createDonationCampaign(donationData);
           setShowDonationModal(false);
         }}
       />
