@@ -20,6 +20,7 @@ router.get('/', async (req, res) => {
       church, 
       category, 
       date, 
+      period,
       status = 'published',
       page = 1, 
       limit = 20,
@@ -40,16 +41,25 @@ router.get('/', async (req, res) => {
       query.category = category;
     }
     
-    // Filtrar por data
+    // Filtrar por data/período
     if (date) {
       const startDate = new Date(date);
       const endDate = new Date(startDate);
       endDate.setDate(endDate.getDate() + 1);
-      
-      query.date = {
-        $gte: startDate,
-        $lt: endDate
-      };
+      query.date = { $gte: startDate, $lt: endDate };
+    } else if (period && ['today','week','month'].includes(period)) {
+      const now = new Date();
+      let from = new Date(0);
+      if (period === 'today') {
+        from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      } else if (period === 'week') {
+        const day = now.getDay();
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+        from = new Date(now.getFullYear(), now.getMonth(), diff);
+      } else if (period === 'month') {
+        from = new Date(now.getFullYear(), now.getMonth(), 1);
+      }
+      query.date = { $gte: from };
     }
     
     // Filtrar por localização
@@ -135,6 +145,26 @@ router.post('/', authenticateToken, requireChurch, validateEvent, async (req, re
     await User.findByIdAndUpdate(req.user.userId, {
       $inc: { 'stats.totalEvents': 1 }
     });
+
+    // Enviar push para seguidores da igreja
+    try {
+      const churchUser = await User.findById(req.user.userId).select('followers');
+      const followers = await User.find({ _id: { $in: churchUser.followers }, expoPushToken: { $ne: null } }).select('expoPushToken');
+      const tokens = followers.map(f => f.expoPushToken);
+      if (tokens.length > 0) {
+        const { Expo } = require('expo-server-sdk');
+        const expo = new Expo();
+        const messages = tokens.filter(t => Expo.isExpoPushToken(t)).map(t => ({
+          to: t,
+          sound: 'default',
+          title: 'Novo evento',
+          body: event.title,
+          data: { type: 'event', eventId: event._id.toString() }
+        }));
+        const chunks = expo.chunkPushNotifications(messages);
+        for (const chunk of chunks) { await expo.sendPushNotificationsAsync(chunk); }
+      }
+    } catch (e) { console.warn('Push seguidores (event) falhou:', e.message); }
 
     res.status(201).json({ success: true, event });
   } catch (error) {

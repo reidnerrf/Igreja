@@ -72,14 +72,18 @@ class ApiService {
   }
 
   async unfollowChurch(churchId: string) {
-    return this.request(`/churches/${churchId}/unfollow`, {
+    return this.request(`/churches/${churchId}/follow`, {
       method: 'DELETE',
     });
   }
 
   // Events
   async getEvents(filters?: any) {
-    const params = new URLSearchParams(filters).toString();
+    const mapped: any = {};
+    if (filters?.filter) {
+      if (['today','week','month'].includes(filters.filter)) mapped.period = filters.filter;
+    }
+    const params = new URLSearchParams({ ...filters, ...mapped }).toString();
     return this.request(`/events?${params}`);
   }
 
@@ -111,7 +115,11 @@ class ApiService {
 
   // Transmissions
   async getTransmissions(filters?: any) {
-    const params = new URLSearchParams(filters).toString();
+    const mapped: any = {};
+    if (filters?.filter) {
+      if (['today','week','month'].includes(filters.filter)) mapped.period = filters.filter;
+    }
+    const params = new URLSearchParams({ ...filters, ...mapped }).toString();
     return this.request(`/transmissions?${params}`);
   }
 
@@ -124,7 +132,11 @@ class ApiService {
 
   // Donations
   async getDonations(filters?: any) {
-    const params = new URLSearchParams(filters).toString();
+    const mapped: any = {};
+    if (filters?.filter) {
+      if (['today','week','month'].includes(filters.filter)) mapped.period = filters.filter;
+    }
+    const params = new URLSearchParams({ ...filters, ...mapped }).toString();
     return this.request(`/donations?${params}`);
   }
 
