@@ -7,8 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Separator } from './ui/separator';
 import { Progress } from './ui/progress';
-import { Church, User, MapPin, Phone, Mail, Instagram, DollarSign, Image as ImageIcon, ArrowLeft } from 'lucide-react';
+import { Church, User, MapPin, Phone, Mail, Instagram, DollarSign, Image as ImageIcon, ArrowLeft, Lock } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { API_BASE_URL } from '../services/api';
 
 interface DetailedSignupFormProps {
   userType: 'church' | 'user';
@@ -23,6 +24,8 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
   
   const [formData, setFormData] = useState({
     name: '',
+    email: '',
+    password: '',
     address: '',
     denomination: '',
     phone: '',
@@ -70,22 +73,47 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
 
   const handleSubmit = async () => {
     setIsLoading(true);
-    // Simular cadastro
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const payload: any = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        userType,
+      };
+      if (userType === 'church') {
+        payload.churchData = {
+          address: formData.address,
+          pixKey: formData.pixKey,
+          denomination: formData.denomination,
+          phone: formData.phone,
+          instagram: formData.instagram,
+        };
+      }
+      const res = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error('Falha no cadastro');
       onComplete();
-    }, 2000);
+    } catch (e) {
+      console.error(e);
+      alert('Não foi possível finalizar o cadastro.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const canProceed = () => {
     if (step === 1) {
-      return formData.name && formData.address;
+      return formData.name && formData.email && formData.password && formData.address;
     }
     if (step === 2) {
-      return formData.denomination && formData.phone;
+      if (userType === 'church') return formData.denomination && formData.phone;
+      return true;
     }
     if (step === 3 && userType === 'church') {
-      return formData.pixKey;
+      return !!formData.pixKey;
     }
     return true;
   };
@@ -136,6 +164,37 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="email"
+                      value={formData.email}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      placeholder="seuemail@exemplo.com"
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Senha</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="password"
+                      type="password"
+                      value={formData.password}
+                      onChange={(e) => handleInputChange('password', e.target.value)}
+                      placeholder="Mínimo 6 caracteres"
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="address">Endereço Completo</Label>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -143,9 +202,9 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
                       id="address"
                       value={formData.address}
                       onChange={(e) => handleInputChange('address', e.target.value)}
-                      placeholder="Rua, número, bairro, cidade, estado"
+                      placeholder={userType==='church' ? 'Rua, número, bairro, cidade, estado' : 'Sua cidade (opcional)'}
                       className="pl-10"
-                      required
+                      required={userType==='church'}
                     />
                   </div>
                 </div>
@@ -162,77 +221,81 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
                   </p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="denomination">Denominação</Label>
-                  <Select onValueChange={(value) => handleInputChange('denomination', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione sua denominação" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="catolica">Católica</SelectItem>
-                      <SelectItem value="batista">Batista</SelectItem>
-                      <SelectItem value="pentecostal">Pentecostal</SelectItem>
-                      <SelectItem value="presbiteriana">Presbiteriana</SelectItem>
-                      <SelectItem value="metodista">Metodista</SelectItem>
-                      <SelectItem value="luterana">Luterana</SelectItem>
-                      <SelectItem value="adventista">Adventista</SelectItem>
-                      <SelectItem value="assembleia">Assembleia de Deus</SelectItem>
-                      <SelectItem value="universal">Universal</SelectItem>
-                      <SelectItem value="outra">Outra</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Telefone</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="(11) 99999-9999"
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Upload de foto de perfil */}
-                <div className="space-y-2">
-                  <Label htmlFor="profile-image">Foto de Perfil</Label>
-                  <div className="flex items-center space-x-4">
-                    <Avatar className="w-16 h-16">
-                      {profileImage ? (
-                        <AvatarImage src={profileImage} />
-                      ) : (
-                        <AvatarFallback>
-                          <ImageIcon className="w-8 h-8 text-muted-foreground" />
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
-                    <div className="flex-1">
-                      <input
-                        type="file"
-                        id="profile-image"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => document.getElementById('profile-image')?.click()}
-                      >
-                        <ImageIcon className="w-4 h-4 mr-2" />
-                        Escolher Foto
-                      </Button>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        JPG, PNG ou GIF (máx. 2MB)
-                      </p>
+                {userType==='church' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="denomination">Denominação</Label>
+                      <Select onValueChange={(value) => handleInputChange('denomination', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione sua denominação" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="catolica">Católica</SelectItem>
+                          <SelectItem value="batista">Batista</SelectItem>
+                          <SelectItem value="pentecostal">Pentecostal</SelectItem>
+                          <SelectItem value="presbiteriana">Presbiteriana</SelectItem>
+                          <SelectItem value="metodista">Metodista</SelectItem>
+                          <SelectItem value="luterana">Luterana</SelectItem>
+                          <SelectItem value="adventista">Adventista</SelectItem>
+                          <SelectItem value="assembleia">Assembleia de Deus</SelectItem>
+                          <SelectItem value="universal">Universal</SelectItem>
+                          <SelectItem value="outra">Outra</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                  </div>
-                </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Telefone</Label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="phone"
+                          value={formData.phone}
+                          onChange={(e) => handleInputChange('phone', e.target.value)}
+                          placeholder="(11) 99999-9999"
+                          className="pl-10"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {/* Upload de foto de perfil */}
+                    <div className="space-y-2">
+                      <Label htmlFor="profile-image">Foto de Perfil</Label>
+                      <div className="flex items-center space-x-4">
+                        <Avatar className="w-16 h-16">
+                          {profileImage ? (
+                            <AvatarImage src={profileImage} />
+                          ) : (
+                            <AvatarFallback>
+                              <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
+                        <div className="flex-1">
+                          <input
+                            type="file"
+                            id="profile-image"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => document.getElementById('profile-image')?.click()}
+                          >
+                            <ImageIcon className="w-4 h-4 mr-2" />
+                            Escolher Foto
+                          </Button>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            JPG, PNG ou GIF (máx. 2MB)
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
