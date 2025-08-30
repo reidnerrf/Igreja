@@ -7,6 +7,7 @@ import { MyRafflesScreen } from '../screens/user/MyRafflesScreen';
 import { MyPostsScreen } from '../screens/user/MyPostsScreen';
 import { UserProfileScreen } from '../screens/user/UserProfileScreen';
 import { PrivacySettingsScreen } from '../screens/user/PrivacySettingsScreen';
+import { CommunityChatScreen } from '../screens/user/CommunityChatScreen';
 
 const Stack = createStackNavigator();
 
@@ -26,6 +27,7 @@ export function UserRootNavigator({ onLogout }: UserRootNavigatorProps) {
       <Stack.Screen name="MyPosts" component={MyPostsScreen} />
       <Stack.Screen name="UserProfile" component={UserProfileScreen} />
       <Stack.Screen name="PrivacySettings" component={PrivacySettingsScreen} />
+      <Stack.Screen name="CommunityChat" component={CommunityChatScreen} />
     </Stack.Navigator>
   );
 }

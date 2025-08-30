@@ -7,27 +7,25 @@ import { chatService } from '../../services/chatService';
 import { apiService } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 
-export function ChurchChatScreen() {
+export function CommunityChatScreen({ route }: any) {
   const { colors } = useTheme();
   const { user } = useAuth();
   const [messages, setMessages] = useState<Array<any>>([]);
   const [text, setText] = useState('');
   const listRef = useRef<FlatList>(null);
-  const room = `church:${user?.id || 'unknown'}`;
+  const churchId = route?.params?.churchId || 'global';
+  const room = `community:${churchId}`;
 
   useEffect(() => {
     chatService.connect();
     chatService.join(room);
     const handler = (msg: any) => setMessages(prev => [...prev, msg]);
     chatService.onMessage(handler);
-    // load history
     apiService['request'](`/chat/history?room=${encodeURIComponent(room)}&limit=50`, { method: 'GET' } as any)
       .then(setMessages)
       .catch(() => {});
-    return () => {
-      chatService.offMessage(handler);
-    };
-  }, []);
+    return () => { chatService.offMessage(handler); };
+  }, [room]);
 
   const send = async () => {
     if (!text.trim()) return;
@@ -49,7 +47,7 @@ export function ChurchChatScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Mural Comunitário</Text>
+        <Text style={styles.title}>Chat da Comunidade</Text>
       </View>
       <FlatList
         ref={listRef}
@@ -63,7 +61,7 @@ export function ChurchChatScreen() {
         )}
       />
       <View style={styles.inputBar}>
-        <TextInput value={text} onChangeText={setText} placeholder="Escreva uma mensagem" placeholderTextColor={colors.mutedForeground} style={styles.input} />
+        <TextInput value={text} onChangeText={setText} placeholder="Mensagem" placeholderTextColor={colors.mutedForeground} style={styles.input} />
         <TouchableOpacity style={styles.send} onPress={send}>
           <Ionicons name="send" size={18} color={colors.primaryForeground} />
         </TouchableOpacity>
