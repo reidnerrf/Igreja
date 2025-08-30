@@ -12,6 +12,9 @@ import { MapComponent } from './MapComponent';
 import { AgendaComponent } from './AgendaComponent';
 import { LiveStreamComponent } from './LiveStreamComponent';
 import { DonationComponent } from './DonationComponent';
+import { NLPProcessor } from './ai/NLPProcessor';
+import { H3Deduplication } from './ai/H3Deduplication';
+import { RecommendationEngine } from './ai/RecommendationEngine';
 import {
   MapPin,
   Calendar,
@@ -225,6 +228,26 @@ export function UserDashboard({ onLogout }: UserDashboardProps) {
 
           <TabsContent value="doacoes">
             <DonationComponent userType="user" />
+          </TabsContent>
+
+          <TabsContent value="ia">
+            <div className="space-y-6">
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold mb-2">Inteligência Artificial</h2>
+                <p className="text-muted-foreground">
+                  Ferramentas inteligentes para encontrar e conectar com igrejas
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <NLPProcessor />
+                <RecommendationEngine />
+              </div>
+              
+              <div className="grid grid-cols-1 gap-6">
+                <H3Deduplication />
+              </div>
+            </div>
           </TabsContent>
 
         </Tabs>
