@@ -29,6 +29,7 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
     email: '',
     password: '',
     address: '',
+    city: '',
     denomination: '',
     phone: '',
     pixKey: '', // Apenas para igreja
@@ -108,6 +109,8 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
       if (userType === 'church') {
         if (!formData.denomination) e.denomination = 'Selecione a denominação';
         if (!formData.phone) e.phone = 'Informe o telefone';
+      } else {
+        // usuário: cidade opcional, sem erros obrigatórios
       }
     } else if (currentStep === 3 && userType === 'church') {
       if (!formData.pixKey) e.pixKey = 'Informe a chave PIX';
@@ -134,6 +137,8 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
           phone: formData.phone,
           instagram: formData.instagram,
         };
+      } else {
+        if (formData.city) payload.city = formData.city;
       }
       const res = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
@@ -247,7 +252,7 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="address">Endereço Completo</Label>
+                  <Label htmlFor="address">{userType==='church' ? 'Endereço Completo' : 'Endereço/Cidade (opcional)'}</Label>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -267,13 +272,13 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
             {step === 2 && (
               <div className="space-y-4">
                 <div className="text-center mb-6">
-                  <h3 className="text-lg font-medium">Contato e Denominação</h3>
+                  <h3 className="text-lg font-medium">{userType==='church' ? 'Contato e Denominação' : 'Seu Perfil'}</h3>
                   <p className="text-sm text-muted-foreground">
-                    Informações de contato e denominação religiosa
+                    {userType==='church' ? 'Informações de contato e denominação religiosa' : 'Personalize seu perfil'}
                   </p>
                 </div>
 
-                {userType==='church' && (
+                {userType==='church' ? (
                   <>
                     <div className="space-y-2">
                       <Label htmlFor="denomination">Denominação</Label>
@@ -315,6 +320,57 @@ export function DetailedSignupForm({ userType, onComplete, onBack }: DetailedSig
 
                     <div className="space-y-2">
                       <Label htmlFor="profile-image">Foto de Perfil</Label>
+                      <div className="flex items-center space-x-4">
+                        <Avatar className="w-16 h-16">
+                          {profileImage ? (
+                            <AvatarImage src={profileImage} />
+                          ) : (
+                            <AvatarFallback>
+                              <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
+                        <div className="flex-1">
+                          <input
+                            type="file"
+                            id="profile-image"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => document.getElementById('profile-image')?.click()}
+                          >
+                            <ImageIcon className="w-4 h-4 mr-2" />
+                            Escolher Foto
+                          </Button>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            JPG, PNG ou GIF (máx. 2MB)
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="city">Cidade</Label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="city"
+                          value={formData.city}
+                          onChange={(e) => handleInputChange('city', e.target.value)}
+                          placeholder="Sua cidade"
+                          className="pl-10"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="profile-image">Foto de Perfil (opcional)</Label>
                       <div className="flex items-center space-x-4">
                         <Avatar className="w-16 h-16">
                           {profileImage ? (
