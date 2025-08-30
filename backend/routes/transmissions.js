@@ -1,16 +1,16 @@
 const express = require('express');
 const { authenticateToken, requireChurch } = require('../middleware/auth');
+const Transmission = require('../models/Transmission');
 
 const router = express.Router();
 
 // Lista mockada com filtros básicos por período e plataforma
 router.get('/', async (req, res) => {
   try {
-    const { period = 'all', platform } = req.query;
-    // Em produção, consultar coleção Transmissions
-    const all = [];
-    let filtered = all;
-    if (platform) filtered = filtered.filter(t => t.platform === platform);
+    const { period = 'all', platform, church, page = 1, limit = 20 } = req.query;
+    const query = {};
+    if (platform) query.platform = platform;
+    if (church) query.church = church;
     if (period !== 'all') {
       const now = new Date();
       let from = new Date(0);
@@ -20,9 +20,15 @@ router.get('/', async (req, res) => {
         const diff = now.getDate() - day + (day === 0 ? -6 : 1);
         from = new Date(now.getFullYear(), now.getMonth(), diff);
       } else if (period === 'month') from = new Date(now.getFullYear(), now.getMonth(), 1);
-      filtered = filtered.filter(t => new Date(t.createdAt) >= from);
+      query.createdAt = { $gte: from };
     }
-    res.json({ success: true, transmissions: filtered });
+    const transmissions = await Transmission.find(query)
+      .populate('church', 'name profileImage')
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit))
+      .skip((parseInt(page) - 1) * parseInt(limit));
+    const total = await Transmission.countDocuments(query);
+    res.json({ success: true, transmissions, pagination: { page: parseInt(page), limit: parseInt(limit), total } });
   } catch (error) {
     console.error('Erro ao listar transmissões:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
@@ -31,8 +37,9 @@ router.get('/', async (req, res) => {
 
 router.post('/', authenticateToken, requireChurch, async (req, res) => {
   try {
-    // Em produção, salvar no banco.
-    res.status(201).json({ success: true, transmission: { id: 'mock', ...req.body } });
+    const transmission = await Transmission.create({ ...req.body, church: req.user.userId });
+    await transmission.populate('church', 'name profileImage');
+    res.status(201).json({ success: true, transmission });
   } catch (error) {
     console.error('Erro ao criar transmissão:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });

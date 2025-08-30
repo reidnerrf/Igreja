@@ -1,5 +1,6 @@
 const express = require('express');
-const Donation = require('../models/Donation');
+const { Donation, DonationCampaign } = require('../models/Donation');
+const User = require('../models/User');
 const { authenticateToken, requireChurch } = require('../middleware/auth');
 
 const router = express.Router();
@@ -7,8 +8,9 @@ const router = express.Router();
 // Listar doações com filtro por período
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const { period = 'all', campaign, page = 1, limit = 20 } = req.query;
+    const { period = 'all', campaign, church, page = 1, limit = 20 } = req.query;
     const query = {};
+    if (church) query.church = church;
 
     if (campaign) query.campaign = campaign;
 
@@ -40,14 +42,42 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
-// Criar campanha (simplificado)
+// Criar campanha
 router.post('/campaigns', authenticateToken, requireChurch, async (req, res) => {
   try {
-    // Aqui você salvaria um documento Campaign (modelo não incluído neste snippet)
-    // Simular resposta de criação
-    res.status(201).json({ success: true, campaign: { id: 'mock', ...req.body } });
+    const campaign = await DonationCampaign.create({ ...req.body, church: req.user.userId });
+    res.status(201).json({ success: true, campaign });
   } catch (error) {
     console.error('Erro ao criar campanha:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Criar doação (processamento simplificado)
+router.post('/', authenticateToken, async (req, res) => {
+  try {
+    const donation = await Donation.create({ ...req.body, donor: req.user.userId });
+    // Atualizar estatísticas da igreja
+    await User.findByIdAndUpdate(donation.church, { $inc: { 'stats.totalDonations': 1 } });
+    res.status(201).json({ success: true, donation });
+  } catch (error) {
+    console.error('Erro ao criar doação:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Processar doação (simulado)
+router.post('/:id/process', authenticateToken, async (req, res) => {
+  try {
+    const donation = await Donation.findById(req.params.id);
+    if (!donation) return res.status(404).json({ error: 'Doação não encontrada' });
+    donation.status = 'completed';
+    donation.processedAt = new Date();
+    donation.paymentData = { ...(donation.paymentData || {}), ...req.body };
+    await donation.save();
+    res.json({ success: true, donation });
+  } catch (error) {
+    console.error('Erro ao processar doação:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
