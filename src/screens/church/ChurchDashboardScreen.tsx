@@ -19,6 +19,8 @@ import { CreateAnnouncementModal } from '../../components/modals/CreateAnnouncem
 import { CreateDonationModal } from '../../components/modals/CreateDonationModal';
 import { apiService } from '../../services/api';
 import { notificationService } from '../../services/notificationService';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '../../components/ui/chart';
+import { LineChart, Line, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from 'recharts@2.15.2';
 
 export function ChurchDashboardScreen() {
   const { colors } = useTheme();
@@ -48,18 +50,19 @@ export function ChurchDashboardScreen() {
   ]);
 
   const [analytics, setAnalytics] = useState<any | null>(null);
+  const [period, setPeriod] = useState<'week' | 'month' | '90d'>('month');
 
   useEffect(() => {
     if (user?.isPremium) {
-      apiService.getAnalytics('church', 'month').then(setAnalytics).catch(() => {});
+      apiService.getAnalytics('church', period).then(setAnalytics).catch(() => {});
     }
-  }, [user?.isPremium]);
+  }, [user?.isPremium, period]);
 
   const onRefresh = async () => {
     setRefreshing(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
     if (user?.isPremium) {
-      try { setAnalytics(await apiService.getAnalytics('church', 'month')); } catch {}
+      try { setAnalytics(await apiService.getAnalytics('church', period)); } catch {}
     }
     setRefreshing(false);
   };
@@ -84,7 +87,6 @@ export function ChurchDashboardScreen() {
           );
           return;
         }
-        // Navegação/implementação de rifa pela tela dedicada
         break;
     }
   };
@@ -314,6 +316,16 @@ export function ChurchDashboardScreen() {
     }
   };
 
+  const series = [
+    { name: 'Doações', dataKey: 'donationsTotal', stroke: colors.success },
+    { name: 'Engajamento', dataKey: 'engagement', stroke: colors.primary },
+    { name: 'Rifas', dataKey: 'raffleRevenue', stroke: colors.gold },
+  ];
+
+  const chartData = [
+    { label: 'Sem.', donationsTotal: analytics?.donationsTotal || 0, engagement: analytics?.engagement || 0, raffleRevenue: analytics?.raffleRevenue || 0 },
+  ];
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -442,20 +454,26 @@ export function ChurchDashboardScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Relatórios (Premium)</Text>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                {(['week','month','90d'] as const).map(p => (
+                  <TouchableOpacity key={p} onPress={() => setPeriod(p)} style={{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, backgroundColor: period===p ? colors.primary : colors.card, borderWidth: 1, borderColor: colors.border }}>
+                    <Text style={{ color: period===p ? colors.primaryForeground : colors.foreground, fontSize: 12 }}>{p.toUpperCase()}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
-            <View style={styles.statsGrid}>
-              <View style={styles.statCard}>
-                <Text style={styles.statValue}>{analytics.eventsThisMonth}</Text>
-                <Text style={styles.statLabel}>Eventos no mês</Text>
-              </View>
-              <View style={styles.statCard}>
-                <Text style={styles.statValue}>{analytics.liveViewers || 0}</Text>
-                <Text style={styles.statLabel}>Pico de espectadores</Text>
-              </View>
-              <View style={styles.statCard}>
-                <Text style={styles.statValue}>R$ {analytics.donationsTotal?.toLocaleString?.() || 0}</Text>
-                <Text style={styles.statLabel}>Doações no mês</Text>
-              </View>
+            <View style={{ backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.border, padding: 12 }}>
+              <ChartContainer id="analytics" config={{}}>
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="label" />
+                  <YAxis />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  {series.map(s => (
+                    <Line key={s.dataKey} type="monotone" dataKey={s.dataKey as any} name={s.name} stroke={s.stroke} dot={false} />
+                  ))}
+                </LineChart>
+              </ChartContainer>
             </View>
           </View>
         )}
