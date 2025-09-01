@@ -48,6 +48,10 @@ const devotionalsRoutes = require('./routes/devotionals');
 const chatRoutes = require('./routes/chat');
 const pixRoutes = require('./routes/pix');
 const eventsIcsRoutes = require('./routes/events-ics');
+const recommendationsRoutes = require('./routes/recommendations');
+const moderationRoutes = require('./routes/moderation');
+const plansRoutes = require('./routes/plans');
+const raffleComplianceRoutes = require('./routes/raffle-compliance');
 let premiumRoutes;
 try { premiumRoutes = require('./routes/premium'); } catch (_) { premiumRoutes = express.Router(); }
 
@@ -68,6 +72,9 @@ app.use('/api/devotionals', devotionalsRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/pix', pixRoutes);
 app.use('/api/events-ics', eventsIcsRoutes);
+app.use('/api/recommendations', recommendationsRoutes);
+app.use('/api/moderation', moderationRoutes);
+app.use('/api/raffles', raffleComplianceRoutes);
 
 // Rota de health check
 app.get('/health', (req, res) => {

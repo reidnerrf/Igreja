@@ -120,6 +120,43 @@ const createRateLimit = (windowMs, max, message) => {
   };
 };
 
+// Middleware para rate limiting baseado no plano do usuário
+const rateLimitByPlan = (plansLimits) => {
+  return (req, res, next) => {
+    const userPlan = req.user.userType === 'church' ? req.user.user.plan : null;
+    const limitConfig = plansLimits[userPlan] || plansLimits['default'];
+
+    if (!limitConfig) {
+      return next();
+    }
+
+    const { windowMs, max, message } = limitConfig;
+
+    const key = req.user.userId;
+    const now = Date.now();
+
+    if (!rateLimitByPlan.requests) {
+      rateLimitByPlan.requests = new Map();
+    }
+
+    if (!rateLimitByPlan.requests.has(key)) {
+      rateLimitByPlan.requests.set(key, []);
+    }
+
+    const userRequests = rateLimitByPlan.requests.get(key);
+    const validRequests = userRequests.filter(time => now - time < windowMs);
+
+    if (validRequests.length >= max) {
+      return res.status(429).json({ error: message || 'Limite de requisições excedido' });
+    }
+
+    validRequests.push(now);
+    rateLimitByPlan.requests.set(key, validRequests);
+
+    next();
+  };
+};
+
 module.exports = {
   authenticateToken,
   requireChurch,
@@ -127,5 +164,6 @@ module.exports = {
   requirePremium,
   checkPremium,
   requireOwnership,
-  createRateLimit
+  createRateLimit,
+  rateLimitByPlan
 };

@@ -29,12 +29,41 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  // Sistema Premium para Usuários
   isPremium: {
     type: Boolean,
     default: false
   },
   premiumExpiresAt: {
     type: Date,
+    default: null
+  },
+  premiumFeatures: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'PremiumFeature'
+  }],
+  premiumSubscription: {
+    plan: String,
+    billingCycle: {
+      type: String,
+      enum: ['monthly', 'yearly']
+    },
+    autoRenew: { type: Boolean, default: true },
+    paymentMethod: {
+      type: String,
+      enum: ['credit_card', 'paypal', 'bank_transfer']
+    }
+  },
+
+  // Sistema de Planos para Igrejas
+  churchSubscription: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ChurchSubscription',
+    default: null
+  },
+  churchPlan: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ChurchPlan',
     default: null
   },
   

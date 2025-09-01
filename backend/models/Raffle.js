@@ -135,6 +135,104 @@ const raffleSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+
+  // Sistema de Compliance
+  compliance: {
+    // Normas locais
+    localRegulations: {
+      state: String, // Estado onde a rifa é realizada
+      city: String,  // Cidade onde a rifa é realizada
+      regulationNumber: String, // Número da regulamentação local
+      authority: String, // Órgão responsável
+      complianceDocument: String, // URL do documento de compliance
+      maxPrizeValue: Number, // Valor máximo permitido por lei
+      ageRestriction: { type: Number, default: 18 }, // Idade mínima
+      taxRate: { type: Number, default: 0 }, // Taxa de imposto
+      requiresNotary: { type: Boolean, default: false }, // Requer cartório
+      requiresInsurance: { type: Boolean, default: false } // Requer seguro
+    },
+
+    // Transparência do sorteio
+    transparency: {
+      drawMethod: {
+        type: String,
+        enum: ['random', 'public_draw', 'notary_supervised'],
+        default: 'random'
+      },
+      witnesses: [{
+        name: String,
+        document: String, // CPF/CNPJ
+        role: String // testemunha, representante, etc.
+      }],
+      videoRecording: {
+        url: String,
+        required: { type: Boolean, default: false }
+      },
+      publicAnnouncement: {
+        method: {
+          type: String,
+          enum: ['website', 'social_media', 'newspaper', 'radio'],
+          default: 'website'
+        },
+        date: Date,
+        proof: String // URL da prova
+      }
+    },
+
+    // Auditoria
+    audit: {
+      auditor: {
+        name: String,
+        company: String,
+        license: String
+      },
+      auditReport: String, // URL do relatório
+      auditDate: Date,
+      complianceStatus: {
+        type: String,
+        enum: ['pending', 'approved', 'rejected', 'under_review'],
+        default: 'pending'
+      },
+      notes: String
+    },
+
+    // Limites e validações
+    limits: {
+      maxTicketsPerPerson: { type: Number, default: 10 },
+      maxRevenue: Number, // Receita máxima permitida
+      minParticipants: { type: Number, default: 1 },
+      geographicRestriction: {
+        allowedStates: [String],
+        allowedCities: [String]
+      }
+    },
+
+    // Documentação obrigatória
+    requiredDocuments: {
+      regulationApproval: { type: Boolean, default: false },
+      taxDeclaration: { type: Boolean, default: false },
+      insurancePolicy: { type: Boolean, default: false },
+      notaryDeed: { type: Boolean, default: false }
+    }
+  },
+
+  // Histórico de compliance
+  complianceHistory: [{
+    action: {
+      type: String,
+      enum: ['created', 'updated', 'audited', 'approved', 'rejected', 'drawn']
+    },
+    performedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now
+    },
+    details: String,
+    documents: [String] // URLs de documentos relacionados
+  }],
   
   // Estatísticas
   stats: {

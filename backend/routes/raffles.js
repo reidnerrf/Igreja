@@ -1,7 +1,7 @@
 const express = require('express');
 const { Raffle } = require('../models/Raffle');
 const User = require('../models/User');
-const { authenticateToken, requireChurch, requirePremium } = require('../middleware/auth');
+const { authenticateToken, requireChurch, requirePremium, rateLimitByPlan } = require('../middleware/auth');
 const { body, validationResult } = require('express-validator');
 
 const router = express.Router();
