@@ -14,6 +14,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { Card } from '../../components/Card';
 import { apiService } from '../../services/api';
+import { VoiceRecorder } from '../../components/VoiceRecorder';
 import { Card as BaseCard } from '../../components/Card';
 
 export function UserDashboardScreen() {
@@ -326,6 +327,18 @@ export function UserDashboardScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
+        {/* Notas por voz (transcrição rápida) */}
+        <Card>
+          <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.foreground, marginBottom: 8 }}>Nota Rápida por Voz</Text>
+          <VoiceRecorder
+            color={colors.primary}
+            onTranscript={(text) => {
+              // Aqui você pode salvar em um serviço de notas ou preencher um campo
+              // Por ora, conceder pequenos pontos por uso de ditado
+              apiService.addPoints(1, 'voice_note', text).catch(()=>{});
+            }}
+          />
+        </Card>
         {/* Gamificação */}
         <BaseCard>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
