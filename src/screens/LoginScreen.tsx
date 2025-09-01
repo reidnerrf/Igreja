@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
+import * as WebBrowser from 'expo-web-browser';
+import * as AuthSession from 'expo-auth-session';
+import * as Facebook from 'expo-auth-session/providers/facebook';
+
+WebBrowser.maybeCompleteAuthSession();
 
 interface LoginScreenProps {
   onLogin: (type: 'church' | 'user') => void;
@@ -22,13 +27,21 @@ interface LoginScreenProps {
 
 export function LoginScreen({ onLogin }: LoginScreenProps) {
   const { colors } = useTheme();
-  const { login } = useAuth();
+  const { login, loginWithToken } = useAuth();
   const [userType, setUserType] = useState<'church' | 'user'>('user');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+
+  const FB_APP_ID = ((import.meta as any)?.env?.VITE_FACEBOOK_APP_ID) || (process as any)?.env?.EXPO_PUBLIC_FACEBOOK_APP_ID || 'FB_APP_ID_PLACEHOLDER';
+  const redirectUri = AuthSession.makeRedirectUri({ useProxy: true });
+  const [fbRequest, fbResponse, fbPromptAsync] = Facebook.useAuthRequest({
+    clientId: FB_APP_ID,
+    scopes: ['public_profile', 'email'],
+    redirectUri,
+  });
 
   const handleEmailLogin = async () => {
     if (!email || !password) {
@@ -47,14 +60,43 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
     }
   };
 
+  const handleFacebookLogin = async () => {
+    setIsLoading(true);
+    try {
+      const result = await fbPromptAsync({ useProxy: true });
+      if (!result || result.type !== 'success' || !(result as any).authentication?.accessToken) {
+        throw new Error('cancelled');
+      }
+      const accessToken = (result as any).authentication.accessToken as string;
+      const profileResp = await fetch(`https://graph.facebook.com/me?fields=id,name,email,picture.type(large)&access_token=${accessToken}`);
+      const profile = await profileResp.json();
+      const userData = {
+        id: profile.id,
+        name: profile.name,
+        email: profile.email,
+        picture: profile?.picture?.data?.url,
+      };
+      const apiResp = await apiService.socialLogin('facebook', accessToken, userType, userData);
+      const mappedUser = { ...apiResp.user, type: apiResp.user?.userType ?? userType } as any;
+      await loginWithToken(apiResp.token, mappedUser);
+      onLogin(mappedUser.type);
+    } catch (error) {
+      Alert.alert('Erro', 'Falha no login com Facebook');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSocialLogin = async (provider: 'Google' | 'Apple' | 'Facebook') => {
     setIsLoading(true);
     try {
-      // Obter credenciais do provedor (placeholder; integrar SDKs Expo AuthSession / Apple / Facebook)
+      if (provider === 'Facebook') {
+        setIsLoading(false);
+        return await handleFacebookLogin();
+      }
       const fakeToken = 'provider_token_demo';
       const fakeUserData = { id: 'prov_user_id_demo', name: `${provider} User`, email: `user@${provider.toLowerCase()}.com`, picture: undefined };
       await apiService.socialLogin(provider.toLowerCase(), fakeToken, userType, fakeUserData);
-      // Reutilizamos o contexto local demo
       await login(fakeUserData.email, 'social', userType);
       onLogin(userType);
     } catch (error) {

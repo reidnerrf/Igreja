@@ -21,6 +21,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (email: string, password: string, type: 'church' | 'user') => Promise<void>;
+  loginWithToken: (token: string, user: User) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (userData: Partial<User>) => Promise<void>;
 }
@@ -90,6 +91,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const loginWithToken = async (token: string, userData: User) => {
+    setIsLoading(true);
+    try {
+      await AsyncStorage.setItem('auth_token', token);
+      await AsyncStorage.setItem('user_data', JSON.stringify(userData));
+      setUser(userData);
+    } catch (error) {
+      console.error('loginWithToken error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const updateUser = async (userData: Partial<User>) => {
     try {
       const updatedUser = { ...user, ...userData } as User;
@@ -101,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, isLoading, login, loginWithToken, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

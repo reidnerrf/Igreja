@@ -10,10 +10,12 @@ import { LoginScreen } from './src/screens/LoginScreen';
 import { ChurchRootNavigator } from './src/navigation/ChurchRootNavigator';
 import { UserRootNavigator } from './src/navigation/UserRootNavigator';
 import { LoadingScreen } from './src/screens/LoadingScreen';
+import { useOfflineSync } from './src/hooks/useOfflineSync';
 
 const Stack = createStackNavigator();
 
 export default function App() {
+  useOfflineSync();
   const [isLoading, setIsLoading] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -45,7 +47,7 @@ export default function App() {
   };
 
   const handleLogin = async (type: 'church' | 'user') => {
-    await AsyncStorage.setItem('auth_token', 'demo_token');
+    // Do not overwrite token set by social login; just persist the user type
     await AsyncStorage.setItem('user_type', type);
     setIsAuthenticated(true);
     setUserType(type);

@@ -213,4 +213,42 @@ router.put('/push-token', async (req, res) => {
   }
 });
 
+// Atualizar perfil do usuário
+router.put('/profile', authenticateToken, async (req, res) => {
+  try {
+    const { name, email, profileImage, city, denomination, ministry, churchData } = req.body;
+    
+    const updateData = {};
+    
+    if (name) updateData.name = name;
+    if (email) updateData.email = email;
+    if (city) updateData.city = city;
+    if (denomination) updateData.denomination = denomination;
+    if (ministry) updateData.ministry = ministry;
+    if (churchData) updateData.churchData = churchData;
+    
+    // Validar se a imagem de perfil é uma URL válida (deve começar com /uploads/)
+    if (profileImage && typeof profileImage === 'string') {
+      if (!profileImage.startsWith('/uploads/')) {
+        return res.status(400).json({ error: 'Imagem de perfil deve ser uma URL válida de upload' });
+      }
+      updateData.profileImage = profileImage;
+    }
+    
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.userId,
+      updateData,
+      { new: true, runValidators: true }
+    );
+    
+    res.json({
+      success: true,
+      user: updatedUser.getPublicData()
+    });
+  } catch (error) {
+    console.error('Erro ao atualizar perfil:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 module.exports = router;

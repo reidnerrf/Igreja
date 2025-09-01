@@ -61,7 +61,23 @@ router.post('/campaigns', authenticateToken, requireChurch, async (req, res) => 
     while (await DonationCampaign.findOne({ slug })) {
       slug = `${baseSlug}-${i++}`;
     }
-    const campaign = await DonationCampaign.create({ ...req.body, church: req.user.userId, slug });
+    // Se a campanha contém imagens, elas devem ser enviadas via /api/upload/donation primeiro
+    // e as URLs das imagens devem ser incluídas em req.body.images
+    const campaignData = {
+      ...req.body,
+      church: req.user.userId,
+      slug
+    };
+
+    // Validar se as imagens são URLs válidas (devem começar com /uploads/)
+    if (req.body.images && Array.isArray(req.body.images)) {
+      const validImages = req.body.images.filter(img => 
+        typeof img === 'string' && img.startsWith('/uploads/')
+      );
+      campaignData.images = validImages;
+    }
+
+    const campaign = await DonationCampaign.create(campaignData);
     res.status(201).json({ success: true, campaign });
   } catch (error) {
     console.error('Erro ao criar campanha:', error);
@@ -117,7 +133,17 @@ router.put('/campaigns/:id', authenticateToken, requireChurch, async (req, res) 
   try {
     const campaign = await DonationCampaign.findOne({ _id: req.params.id, church: req.user.userId });
     if (!campaign) return res.status(404).json({ error: 'Campanha não encontrada' });
-    Object.assign(campaign, req.body);
+    const updateData = { ...req.body };
+    
+    // Validar imagens se fornecidas
+    if (req.body.images && Array.isArray(req.body.images)) {
+      const validImages = req.body.images.filter(img => 
+        typeof img === 'string' && img.startsWith('/uploads/')
+      );
+      updateData.images = validImages;
+    }
+    
+    Object.assign(campaign, updateData);
     await campaign.save();
     res.json({ success: true, campaign });
   } catch (error) {

@@ -98,10 +98,20 @@ router.post('/', authenticateToken, requireChurch, requirePremium, validateRaffl
       return res.status(400).json({ errors: errors.array() });
     }
 
+    // Se a rifa contém imagem do prêmio, ela deve ser enviada via /api/upload/raffle-prize primeiro
+    // e a URL da imagem deve ser incluída em req.body.prizeImage
     const raffleData = {
       ...req.body,
       church: req.user.userId
     };
+
+    // Validar se a imagem do prêmio é uma URL válida (deve começar com /uploads/)
+    if (req.body.prizeImage && typeof req.body.prizeImage === 'string') {
+      if (!req.body.prizeImage.startsWith('/uploads/')) {
+        return res.status(400).json({ error: 'Imagem do prêmio deve ser uma URL válida de upload' });
+      }
+      raffleData.prizeImage = req.body.prizeImage;
+    }
 
     const raffle = new Raffle(raffleData);
     await raffle.save();

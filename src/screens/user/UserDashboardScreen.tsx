@@ -14,11 +14,20 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { Card } from '../../components/Card';
 import { apiService } from '../../services/api';
+import { PressableScale } from '../../components/PressableScale';
+import { EmptyState } from '../../components/EmptyState';
+import { VoiceRecorder } from '../../components/VoiceRecorder';
+import { Card as BaseCard } from '../../components/Card';
+import { UpcomingEventsWidget } from '../../components/widgets/UpcomingEventsWidget';
+import { NextLiveWidget } from '../../components/widgets/NextLiveWidget';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export function UserDashboardScreen() {
   const { colors } = useTheme();
   const { user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
+  const [gamification, setGamification] = useState<{ points: number; badges: any[] } | null>(null);
+  const [widgetPrefs, setWidgetPrefs] = useState<{ upcomingEvents: boolean; nextLive: boolean }>({ upcomingEvents: true, nextLive: true });
 
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
   const [dailyVerse, setDailyVerse] = useState({ text: '', reference: '' });
@@ -33,6 +42,7 @@ export function UserDashboardScreen() {
     { id: 'live', title: 'Transmissões', icon: 'radio', color: colors.destructive },
     { id: 'prayers', title: 'Orações', icon: 'heart', color: colors.success },
     { id: 'donations', title: 'Doações', icon: 'card', color: colors.gold },
+    { id: 'checkin', title: 'Check-in QR', icon: 'qr-code', color: colors.primary },
   ];
 
   const load = async () => {
@@ -52,6 +62,14 @@ export function UserDashboardScreen() {
     try {
       const devoRes = await fetch(`${apiService['constructor']['API_BASE_URL'] || ''}` as any).then(r=>r.json()).catch(()=>null as any);
       if (devoRes?.text) setDailyVerse({ text: devoRes.text, reference: devoRes.gospel });
+    } catch {}
+    try {
+      const g = await apiService.getMyGamification();
+      if (g?.gamification) setGamification({ points: g.gamification.points || 0, badges: g.gamification.badges || [] });
+    } catch {}
+    try {
+      const raw = await AsyncStorage.getItem('widgets_prefs');
+      if (raw) setWidgetPrefs(JSON.parse(raw));
     } catch {}
   };
 
@@ -297,6 +315,15 @@ export function UserDashboardScreen() {
     },
   });
 
+  const onQuickAction = (id: string, navigation?: any) => {
+    switch (id) {
+      case 'checkin':
+        // @ts-ignore
+        (navigation as any)?.navigate?.('QRCheckin');
+        break;
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -320,6 +347,68 @@ export function UserDashboardScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
+        {/* Ações Rápidas com microinteração */}
+        <View style={styles.section}>
+          <View style={styles.quickActionsGrid}>
+            {/* @ts-ignore navigation is available via parent stack props in runtime */}
+            {quickActions.map((a) => (
+              <PressableScale key={a.id} style={styles.quickActionButton} onPress={() => onQuickAction(a.id, ({} as any))}>
+                <Ionicons name={a.icon as any} size={24} color={a.color} style={styles.quickActionIcon} />
+                <Text style={styles.quickActionText}>{a.title}</Text>
+              </PressableScale>
+            ))}
+          </View>
+        </View>
+
+        {/* Notas por voz (transcrição rápida) */}
+        <Card>
+          <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.foreground, marginBottom: 8 }}>Nota Rápida por Voz</Text>
+          <VoiceRecorder
+            color={colors.primary}
+            onTranscript={(text) => {
+              // Aqui você pode salvar em um serviço de notas ou preencher um campo
+              // Por ora, conceder pequenos pontos por uso de ditado
+              apiService.addPoints(1, 'voice_note', text).catch(()=>{});
+            }}
+          />
+        </Card>
+        {/* Gamificação */}
+        <BaseCard>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.foreground }}>Seu Progresso</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Ionicons name="trophy" size={16} color={colors.gold} />
+              <Text style={{ color: colors.gold, marginLeft: 6, fontWeight: '600' }}>{gamification?.points ?? 0} pts</Text>
+            </View>
+          </View>
+          <View style={{ flexDirection: 'row', marginTop: 12 }}>
+            {(gamification?.badges || []).slice(0, 5).map((b, i) => (
+              <View key={b.id || i} style={{ paddingHorizontal: 8, paddingVertical: 6, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 8, marginRight: 8 }}>
+                <Text style={{ color: colors.foreground, fontSize: 12 }}>{b.name}</Text>
+              </View>
+            ))}
+            {(!gamification?.badges || gamification?.badges.length === 0) && (
+              <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>Sem conquistas ainda. Participe de eventos!</Text>
+            )}
+          </View>
+        </BaseCard>
+        {/* Widgets selecionados */}
+        <Card>
+          {widgetPrefs.upcomingEvents && (
+            <View style={{ marginBottom: 16 }}>
+              <UpcomingEventsWidget />
+            </View>
+          )}
+          {widgetPrefs.nextLive && (
+            <View style={{ marginBottom: 4 }}>
+              <NextLiveWidget />
+            </View>
+          )}
+          {!widgetPrefs.upcomingEvents && !widgetPrefs.nextLive && (
+            <Text style={{ color: colors.mutedForeground }}>Nenhum widget ativo. Ative em Configurações → Widgets.</Text>
+          )}
+        </Card>
+
         {/* Devocional do Dia */}
         <Card>
           <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.foreground, marginBottom: 8 }}>Evangelho do dia</Text>

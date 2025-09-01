@@ -2,6 +2,7 @@ const express = require('express');
 const Event = require('../models/Event');
 const User = require('../models/User');
 const { authenticateToken, requireChurch } = require('../middleware/auth');
+const { Expo } = require('expo-server-sdk');
 const { body, validationResult } = require('express-validator');
 
 const router = express.Router();
@@ -148,10 +149,20 @@ router.post('/', authenticateToken, requireChurch, validateEvent, async (req, re
       return res.status(400).json({ errors: errors.array() });
     }
 
+    // Se o evento contém imagens, elas devem ser enviadas via /api/upload/event primeiro
+    // e as URLs das imagens devem ser incluídas em req.body.images
     const eventData = {
       ...req.body,
       church: req.user.userId
     };
+
+    // Validar se as imagens são URLs válidas (devem começar com /uploads/)
+    if (req.body.images && Array.isArray(req.body.images)) {
+      const validImages = req.body.images.filter(img => 
+        typeof img === 'string' && img.startsWith('/uploads/')
+      );
+      eventData.images = validImages;
+    }
 
     const event = new Event(eventData);
     await event.save();
@@ -207,7 +218,17 @@ router.put('/:id', authenticateToken, requireChurch, validateEvent, async (req, 
       return res.status(404).json({ error: 'Evento não encontrado' });
     }
 
-    Object.assign(event, req.body);
+    const updateData = { ...req.body };
+    
+    // Validar imagens se fornecidas
+    if (req.body.images && Array.isArray(req.body.images)) {
+      const validImages = req.body.images.filter(img => 
+        typeof img === 'string' && img.startsWith('/uploads/')
+      );
+      updateData.images = validImages;
+    }
+    
+    Object.assign(event, updateData);
     await event.save();
 
     await event.populate('church', 'name profileImage churchData');
@@ -275,6 +296,27 @@ router.post('/:id/attend', authenticateToken, async (req, res) => {
     });
 
     await event.save();
+
+    // Gamificação: award points and first check-in badge
+    try {
+      const me = await User.findById(req.user.userId);
+      if (me) {
+        if (!me.gamification) me.gamification = { points: 0, badges: [], history: [] };
+        me.gamification.points = (me.gamification.points || 0) + 5;
+        me.gamification.history.push({ type: 'event_attendance', points: 5, context: event.title, createdAt: new Date() });
+        const hasBadge = (me.gamification.badges || []).some(b => b.id === 'first_checkin');
+        if (!hasBadge) {
+          me.gamification.badges.push({ id: 'first_checkin', name: 'Primeiro Check-in', icon: 'qr-code', earnedAt: new Date() });
+          if (me.expoPushToken && Expo.isExpoPushToken(me.expoPushToken)) {
+            const expo = new Expo();
+            await expo.sendPushNotificationsAsync([
+              { to: me.expoPushToken, sound: 'default', title: '🏅 Nova conquista!', body: 'Você fez seu primeiro check-in!', data: { type: 'badge_unlocked', badgeId: 'first_checkin' } }
+            ]);
+          }
+        }
+        await me.save();
+      }
+    } catch (e) { console.warn('Gamificação check-in falhou:', e.message); }
 
     res.json({ 
       success: true, 

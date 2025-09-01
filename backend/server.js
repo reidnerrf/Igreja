@@ -17,6 +17,9 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Servir arquivos estáticos da pasta uploads
+app.use('/uploads', express.static('uploads'));
+
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
@@ -44,6 +47,7 @@ const postRoutes = require('./routes/posts');
 const notificationRoutes = require('./routes/notifications');
 const uploadRoutes = require('./routes/upload');
 const analyticsRoutes = require('./routes/analytics');
+const gamificationRoutes = require('./routes/gamification');
 const devotionalsRoutes = require('./routes/devotionals');
 const chatRoutes = require('./routes/chat');
 const pixRoutes = require('./routes/pix');
@@ -67,6 +71,7 @@ app.use('/api/posts', postRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/gamification', gamificationRoutes);
 app.use('/api/premium', premiumRoutes);
 app.use('/api/devotionals', devotionalsRoutes);
 app.use('/api/chat', chatRoutes);
