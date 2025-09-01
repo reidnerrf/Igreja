@@ -86,6 +86,27 @@ const userSchema = new mongoose.Schema({
     }
   },
   
+  // Gamificação
+  gamification: {
+    points: { type: Number, default: 0 },
+    badges: [
+      {
+        id: { type: String },
+        name: { type: String },
+        icon: { type: String, default: null },
+        earnedAt: { type: Date, default: Date.now }
+      }
+    ],
+    history: [
+      {
+        type: { type: String }, // e.g., "event_attendance", "donation", "share"
+        points: { type: Number, default: 0 },
+        context: { type: String, default: null },
+        createdAt: { type: Date, default: Date.now }
+      }
+    ]
+  },
+
   // Social login
   socialLogin: {
     provider: {

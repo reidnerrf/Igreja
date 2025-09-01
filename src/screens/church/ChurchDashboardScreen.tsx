@@ -19,8 +19,8 @@ import { CreateAnnouncementModal } from '../../components/modals/CreateAnnouncem
 import { CreateDonationModal } from '../../components/modals/CreateDonationModal';
 import { apiService } from '../../services/api';
 import { notificationService } from '../../services/notificationService';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '../../components/ui/chart';
-import { LineChart, Line, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from 'recharts@2.15.2';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '../../components/ui/chart';
+import { LineChart, Line, CartesianGrid, XAxis, YAxis, PieChart, Pie, Cell } from 'recharts@2.15.2';
 
 export function ChurchDashboardScreen() {
   const { colors } = useTheme();
@@ -326,6 +326,12 @@ export function ChurchDashboardScreen() {
     { label: 'Sem.', donationsTotal: analytics?.donationsTotal || 0, engagement: analytics?.engagement || 0, raffleRevenue: analytics?.raffleRevenue || 0 },
   ];
 
+  const pieData = [
+    { name: 'Doações', value: analytics?.donationsTotal || 0, fill: colors.success },
+    { name: 'Rifas', value: analytics?.raffleRevenue || 0, fill: colors.gold },
+    { name: 'Engajamento', value: analytics?.engagement || 0, fill: colors.primary },
+  ];
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -463,7 +469,8 @@ export function ChurchDashboardScreen() {
               </View>
             </View>
             <View style={{ backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.border, padding: 12 }}>
-              <ChartContainer id="analytics" config={{}}>
+              <Text style={{ color: colors.foreground, fontWeight: '600', marginBottom: 8 }}>Tendência</Text>
+              <ChartContainer id="analytics-line" config={{}}>
                 <LineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="label" />
@@ -472,7 +479,23 @@ export function ChurchDashboardScreen() {
                   {series.map(s => (
                     <Line key={s.dataKey} type="monotone" dataKey={s.dataKey as any} name={s.name} stroke={s.stroke} dot={false} />
                   ))}
+                  <ChartLegend content={<ChartLegendContent />} />
                 </LineChart>
+              </ChartContainer>
+            </View>
+
+            <View style={{ backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.border, padding: 12, marginTop: 12 }}>
+              <Text style={{ color: colors.foreground, fontWeight: '600', marginBottom: 8 }}>Distribuição</Text>
+              <ChartContainer id="analytics-pie" config={{}}>
+                <PieChart>
+                  <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={80}>
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <ChartLegend content={<ChartLegendContent />} />
+                </PieChart>
               </ChartContainer>
             </View>
           </View>

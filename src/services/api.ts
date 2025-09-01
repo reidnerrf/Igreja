@@ -320,6 +320,25 @@ class ApiService {
     return this.request(`/analytics/${type}?period=${period}`);
   }
 
+  // Gamification
+  async getMyGamification() {
+    return this.request('/gamification/me');
+  }
+
+  async addPoints(points: number, type: string, context?: string) {
+    return this.request('/gamification/me/points', {
+      method: 'POST',
+      body: JSON.stringify({ points, type, context }),
+    });
+  }
+
+  async addBadge(id: string, name: string, icon?: string) {
+    return this.request('/gamification/me/badges', {
+      method: 'POST',
+      body: JSON.stringify({ id, name, icon }),
+    });
+  }
+
   // Premium
   async subscribeToPremium(planId: string, paymentData: any) {
     return this.request('/premium/subscribe', {

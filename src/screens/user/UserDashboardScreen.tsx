@@ -14,11 +14,13 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { Card } from '../../components/Card';
 import { apiService } from '../../services/api';
+import { Card as BaseCard } from '../../components/Card';
 
 export function UserDashboardScreen() {
   const { colors } = useTheme();
   const { user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
+  const [gamification, setGamification] = useState<{ points: number; badges: any[] } | null>(null);
 
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
   const [dailyVerse, setDailyVerse] = useState({ text: '', reference: '' });
@@ -52,6 +54,10 @@ export function UserDashboardScreen() {
     try {
       const devoRes = await fetch(`${apiService['constructor']['API_BASE_URL'] || ''}` as any).then(r=>r.json()).catch(()=>null as any);
       if (devoRes?.text) setDailyVerse({ text: devoRes.text, reference: devoRes.gospel });
+    } catch {}
+    try {
+      const g = await apiService.getMyGamification();
+      if (g?.gamification) setGamification({ points: g.gamification.points || 0, badges: g.gamification.badges || [] });
     } catch {}
   };
 
@@ -320,6 +326,26 @@ export function UserDashboardScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
+        {/* Gamificação */}
+        <BaseCard>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.foreground }}>Seu Progresso</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Ionicons name="trophy" size={16} color={colors.gold} />
+              <Text style={{ color: colors.gold, marginLeft: 6, fontWeight: '600' }}>{gamification?.points ?? 0} pts</Text>
+            </View>
+          </View>
+          <View style={{ flexDirection: 'row', marginTop: 12 }}>
+            {(gamification?.badges || []).slice(0, 5).map((b, i) => (
+              <View key={b.id || i} style={{ paddingHorizontal: 8, paddingVertical: 6, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 8, marginRight: 8 }}>
+                <Text style={{ color: colors.foreground, fontSize: 12 }}>{b.name}</Text>
+              </View>
+            ))}
+            {(!gamification?.badges || gamification?.badges.length === 0) && (
+              <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>Sem conquistas ainda. Participe de eventos!</Text>
+            )}
+          </View>
+        </BaseCard>
         {/* Devocional do Dia */}
         <Card>
           <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.foreground, marginBottom: 8 }}>Evangelho do dia</Text>
