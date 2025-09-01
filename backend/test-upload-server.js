@@ -2,9 +2,18 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { authenticateToken } = require('../middleware/auth');
+const cors = require('cors');
 
-const router = express.Router();
+const app = express();
+const PORT = 3002;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Servir arquivos estáticos da pasta uploads
+app.use('/uploads', express.static('uploads'));
 
 // Configurar storage do multer para salvar arquivos localmente
 const storage = multer.diskStorage({
@@ -15,7 +24,7 @@ const storage = multer.diskStorage({
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
     
-    const uploadPath = path.join(__dirname, '../uploads', String(year), month, day);
+    const uploadPath = path.join(__dirname, 'uploads', String(year), month, day);
     
     // Criar diretórios se não existirem
     fs.mkdirSync(uploadPath, { recursive: true });
@@ -61,17 +70,30 @@ const uploadMultiple = multer({
   }
 });
 
+// Simular autenticação para teste
+const mockAuth = (req, res, next) => {
+  req.user = { userId: 'test-user-123' };
+  next();
+};
+
+// Rota de health check
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    message: 'Servidor de teste de upload funcionando!'
+  });
+});
+
 // Rota para upload de imagem genérica
-router.post('/', authenticateToken, upload.single('image'), async (req, res) => {
+app.post('/api/upload', mockAuth, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Nenhum arquivo foi enviado' });
     }
 
-    // Construir URL para acessar o arquivo
     const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
     
-    // Retornar informações do arquivo
     res.json({
       success: true,
       message: 'Arquivo enviado com sucesso',
@@ -95,16 +117,14 @@ router.post('/', authenticateToken, upload.single('image'), async (req, res) => 
 });
 
 // Rota para upload de imagem de perfil
-router.post('/profile', authenticateToken, upload.single('profileImage'), async (req, res) => {
+app.post('/api/upload/profile', mockAuth, upload.single('profileImage'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Nenhum arquivo foi enviado' });
     }
 
-    // Construir URL para acessar o arquivo
     const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
     
-    // Retornar informações do arquivo
     res.json({
       success: true,
       message: 'Imagem de perfil enviada com sucesso',
@@ -128,7 +148,7 @@ router.post('/profile', authenticateToken, upload.single('profileImage'), async 
 });
 
 // Rota para upload de imagens de posts
-router.post('/post', authenticateToken, uploadMultiple.array('images', 10), async (req, res) => {
+app.post('/api/upload/post', mockAuth, uploadMultiple.array('images', 10), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'Nenhum arquivo foi enviado' });
@@ -162,7 +182,7 @@ router.post('/post', authenticateToken, uploadMultiple.array('images', 10), asyn
 });
 
 // Rota para upload de imagens de eventos
-router.post('/event', authenticateToken, uploadMultiple.array('images', 10), async (req, res) => {
+app.post('/api/upload/event', mockAuth, uploadMultiple.array('images', 10), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'Nenhum arquivo foi enviado' });
@@ -196,7 +216,7 @@ router.post('/event', authenticateToken, uploadMultiple.array('images', 10), asy
 });
 
 // Rota para upload de imagens de doações
-router.post('/donation', authenticateToken, uploadMultiple.array('images', 10), async (req, res) => {
+app.post('/api/upload/donation', mockAuth, uploadMultiple.array('images', 10), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'Nenhum arquivo foi enviado' });
@@ -230,16 +250,14 @@ router.post('/donation', authenticateToken, uploadMultiple.array('images', 10), 
 });
 
 // Rota para upload de imagem de prêmio de rifa
-router.post('/raffle-prize', authenticateToken, upload.single('prizeImage'), async (req, res) => {
+app.post('/api/upload/raffle-prize', mockAuth, upload.single('prizeImage'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Nenhum arquivo foi enviado' });
     }
 
-    // Construir URL para acessar o arquivo
     const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
     
-    // Retornar informações do arquivo
     res.json({
       success: true,
       message: 'Imagem do prêmio enviada com sucesso',
@@ -262,71 +280,8 @@ router.post('/raffle-prize', authenticateToken, upload.single('prizeImage'), asy
   }
 });
 
-// Rota para listar arquivos do usuário (opcional)
-router.get('/my-files', authenticateToken, async (req, res) => {
-  try {
-    // Aqui você pode implementar lógica para listar arquivos do usuário
-    // Por enquanto, retornamos uma mensagem
-    res.json({
-      message: 'Lista de arquivos do usuário',
-      files: []
-    });
-  } catch (error) {
-    console.error('Erro ao listar arquivos:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
-  }
-});
-
-// Rota para deletar arquivo (opcional)
-router.delete('/:filename', authenticateToken, async (req, res) => {
-  try {
-    const { filename } = req.params;
-    
-    // Aqui você pode implementar lógica para verificar se o usuário tem permissão
-    // para deletar o arquivo
-    
-    // Procurar o arquivo em todas as subpastas
-    const uploadsDir = path.join(__dirname, '../uploads');
-    let filePath = null;
-    
-    // Função recursiva para encontrar o arquivo
-    const findFile = (dir) => {
-      const items = fs.readdirSync(dir);
-      for (const item of items) {
-        const fullPath = path.join(dir, item);
-        const stat = fs.statSync(fullPath);
-        
-        if (stat.isDirectory()) {
-          findFile(fullPath);
-        } else if (item === filename) {
-          filePath = fullPath;
-          return;
-        }
-      }
-    };
-    
-    findFile(uploadsDir);
-    
-    if (!filePath) {
-      return res.status(404).json({ error: 'Arquivo não encontrado' });
-    }
-    
-    // Deletar o arquivo
-    fs.unlinkSync(filePath);
-    
-    res.json({
-      success: true,
-      message: 'Arquivo deletado com sucesso'
-    });
-    
-  } catch (error) {
-    console.error('Erro ao deletar arquivo:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
-  }
-});
-
 // Middleware para tratamento de erros do multer
-router.use((error, req, res, next) => {
+app.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
     if (error.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({ error: 'Arquivo muito grande. Máximo 5MB.' });
@@ -344,5 +299,28 @@ router.use((error, req, res, next) => {
   next(error);
 });
 
-module.exports = router;
+// Middleware de tratamento de erros
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ 
+    error: 'Algo deu errado!',
+    message: err.message 
+  });
+});
 
+// Middleware para rotas não encontradas
+app.use('*', (req, res) => {
+  res.status(404).json({ error: 'Rota não encontrada' });
+});
+
+app.listen(PORT, () => {
+  console.log(`🧪 Servidor de teste de upload rodando na porta ${PORT}`);
+  console.log(`📍 Health check: http://localhost:${PORT}/health`);
+  console.log(`📤 Upload genérico: http://localhost:${PORT}/api/upload`);
+  console.log(`👤 Upload perfil: http://localhost:${PORT}/api/upload/profile`);
+  console.log(`📝 Upload posts: http://localhost:${PORT}/api/upload/post`);
+  console.log(`🎉 Upload eventos: http://localhost:${PORT}/api/upload/event`);
+  console.log(`💰 Upload doações: http://localhost:${PORT}/api/upload/donation`);
+  console.log(`🎰 Upload rifas: http://localhost:${PORT}/api/upload/raffle-prize`);
+  console.log(`📁 Arquivos: http://localhost:${PORT}/uploads/`);
+});

@@ -149,10 +149,20 @@ router.post('/', authenticateToken, requireChurch, validateEvent, async (req, re
       return res.status(400).json({ errors: errors.array() });
     }
 
+    // Se o evento contém imagens, elas devem ser enviadas via /api/upload/event primeiro
+    // e as URLs das imagens devem ser incluídas em req.body.images
     const eventData = {
       ...req.body,
       church: req.user.userId
     };
+
+    // Validar se as imagens são URLs válidas (devem começar com /uploads/)
+    if (req.body.images && Array.isArray(req.body.images)) {
+      const validImages = req.body.images.filter(img => 
+        typeof img === 'string' && img.startsWith('/uploads/')
+      );
+      eventData.images = validImages;
+    }
 
     const event = new Event(eventData);
     await event.save();
@@ -208,7 +218,17 @@ router.put('/:id', authenticateToken, requireChurch, validateEvent, async (req, 
       return res.status(404).json({ error: 'Evento não encontrado' });
     }
 
-    Object.assign(event, req.body);
+    const updateData = { ...req.body };
+    
+    // Validar imagens se fornecidas
+    if (req.body.images && Array.isArray(req.body.images)) {
+      const validImages = req.body.images.filter(img => 
+        typeof img === 'string' && img.startsWith('/uploads/')
+      );
+      updateData.images = validImages;
+    }
+    
+    Object.assign(event, updateData);
     await event.save();
 
     await event.populate('church', 'name profileImage churchData');
