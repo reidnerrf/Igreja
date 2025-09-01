@@ -18,12 +18,16 @@ import { PressableScale } from '../../components/PressableScale';
 import { EmptyState } from '../../components/EmptyState';
 import { VoiceRecorder } from '../../components/VoiceRecorder';
 import { Card as BaseCard } from '../../components/Card';
+import { UpcomingEventsWidget } from '../../components/widgets/UpcomingEventsWidget';
+import { NextLiveWidget } from '../../components/widgets/NextLiveWidget';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export function UserDashboardScreen() {
   const { colors } = useTheme();
   const { user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [gamification, setGamification] = useState<{ points: number; badges: any[] } | null>(null);
+  const [widgetPrefs, setWidgetPrefs] = useState<{ upcomingEvents: boolean; nextLive: boolean }>({ upcomingEvents: true, nextLive: true });
 
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
   const [dailyVerse, setDailyVerse] = useState({ text: '', reference: '' });
@@ -62,6 +66,10 @@ export function UserDashboardScreen() {
     try {
       const g = await apiService.getMyGamification();
       if (g?.gamification) setGamification({ points: g.gamification.points || 0, badges: g.gamification.badges || [] });
+    } catch {}
+    try {
+      const raw = await AsyncStorage.getItem('widgets_prefs');
+      if (raw) setWidgetPrefs(JSON.parse(raw));
     } catch {}
   };
 
@@ -384,6 +392,23 @@ export function UserDashboardScreen() {
             )}
           </View>
         </BaseCard>
+        {/* Widgets selecionados */}
+        <Card>
+          {widgetPrefs.upcomingEvents && (
+            <View style={{ marginBottom: 16 }}>
+              <UpcomingEventsWidget />
+            </View>
+          )}
+          {widgetPrefs.nextLive && (
+            <View style={{ marginBottom: 4 }}>
+              <NextLiveWidget />
+            </View>
+          )}
+          {!widgetPrefs.upcomingEvents && !widgetPrefs.nextLive && (
+            <Text style={{ color: colors.mutedForeground }}>Nenhum widget ativo. Ative em Configurações → Widgets.</Text>
+          )}
+        </Card>
+
         {/* Devocional do Dia */}
         <Card>
           <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.foreground, marginBottom: 8 }}>Evangelho do dia</Text>
