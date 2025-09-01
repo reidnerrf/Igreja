@@ -51,7 +51,17 @@ const upload = multer({
   }
 });
 
-// Rota para upload de imagem
+// Configurar multer para múltiplos arquivos
+const uploadMultiple = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB máximo
+    files: 10 // Máximo 10 arquivos
+  }
+});
+
+// Rota para upload de imagem genérica
 router.post('/', authenticateToken, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
@@ -77,6 +87,174 @@ router.post('/', authenticateToken, upload.single('image'), async (req, res) => 
 
   } catch (error) {
     console.error('Erro no upload:', error);
+    res.status(500).json({ 
+      error: 'Erro interno do servidor',
+      message: error.message 
+    });
+  }
+});
+
+// Rota para upload de imagem de perfil
+router.post('/profile', authenticateToken, upload.single('profileImage'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Nenhum arquivo foi enviado' });
+    }
+
+    // Construir URL para acessar o arquivo
+    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    
+    // Retornar informações do arquivo
+    res.json({
+      success: true,
+      message: 'Imagem de perfil enviada com sucesso',
+      file: {
+        originalName: req.file.originalname,
+        filename: req.file.filename,
+        size: req.file.size,
+        mimetype: req.file.mimetype,
+        url: fileUrl,
+        path: req.file.path
+      }
+    });
+
+  } catch (error) {
+    console.error('Erro no upload de perfil:', error);
+    res.status(500).json({ 
+      error: 'Erro interno do servidor',
+      message: error.message 
+    });
+  }
+});
+
+// Rota para upload de imagens de posts
+router.post('/post', authenticateToken, uploadMultiple.array('images', 10), async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'Nenhum arquivo foi enviado' });
+    }
+
+    const uploadedFiles = req.files.map(file => {
+      const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
+      return {
+        originalName: file.originalname,
+        filename: file.filename,
+        size: file.size,
+        mimetype: file.mimetype,
+        url: fileUrl,
+        path: file.path
+      };
+    });
+
+    res.json({
+      success: true,
+      message: `${uploadedFiles.length} arquivo(s) enviado(s) com sucesso`,
+      files: uploadedFiles
+    });
+
+  } catch (error) {
+    console.error('Erro no upload de post:', error);
+    res.status(500).json({ 
+      error: 'Erro interno do servidor',
+      message: error.message 
+    });
+  }
+});
+
+// Rota para upload de imagens de eventos
+router.post('/event', authenticateToken, uploadMultiple.array('images', 10), async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'Nenhum arquivo foi enviado' });
+    }
+
+    const uploadedFiles = req.files.map(file => {
+      const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
+      return {
+        originalName: file.originalname,
+        filename: file.filename,
+        size: file.size,
+        mimetype: file.mimetype,
+        url: fileUrl,
+        path: file.path
+      };
+    });
+
+    res.json({
+      success: true,
+      message: `${uploadedFiles.length} arquivo(s) de evento enviado(s) com sucesso`,
+      files: uploadedFiles
+    });
+
+  } catch (error) {
+    console.error('Erro no upload de evento:', error);
+    res.status(500).json({ 
+      error: 'Erro interno do servidor',
+      message: error.message 
+    });
+  }
+});
+
+// Rota para upload de imagens de doações
+router.post('/donation', authenticateToken, uploadMultiple.array('images', 10), async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'Nenhum arquivo foi enviado' });
+    }
+
+    const uploadedFiles = req.files.map(file => {
+      const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
+      return {
+        originalName: file.originalname,
+        filename: file.filename,
+        size: file.size,
+        mimetype: file.mimetype,
+        url: fileUrl,
+        path: file.path
+      };
+    });
+
+    res.json({
+      success: true,
+      message: `${uploadedFiles.length} arquivo(s) de doação enviado(s) com sucesso`,
+      files: uploadedFiles
+    });
+
+  } catch (error) {
+    console.error('Erro no upload de doação:', error);
+    res.status(500).json({ 
+      error: 'Erro interno do servidor',
+      message: error.message 
+    });
+  }
+});
+
+// Rota para upload de imagem de prêmio de rifa
+router.post('/raffle-prize', authenticateToken, upload.single('prizeImage'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Nenhum arquivo foi enviado' });
+    }
+
+    // Construir URL para acessar o arquivo
+    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    
+    // Retornar informações do arquivo
+    res.json({
+      success: true,
+      message: 'Imagem do prêmio enviada com sucesso',
+      file: {
+        originalName: req.file.originalname,
+        filename: req.file.filename,
+        size: req.file.size,
+        mimetype: req.file.mimetype,
+        url: fileUrl,
+        path: req.file.path
+      }
+    });
+
+  } catch (error) {
+    console.error('Erro no upload de prêmio:', error);
     res.status(500).json({ 
       error: 'Erro interno do servidor',
       message: error.message 
@@ -154,7 +332,7 @@ router.use((error, req, res, next) => {
       return res.status(400).json({ error: 'Arquivo muito grande. Máximo 5MB.' });
     }
     if (error.code === 'LIMIT_FILE_COUNT') {
-      return res.status(400).json({ error: 'Muitos arquivos. Máximo 1 arquivo.' });
+      return res.status(400).json({ error: 'Muitos arquivos. Máximo 10 arquivos.' });
     }
     return res.status(400).json({ error: 'Erro no upload do arquivo' });
   }
