@@ -14,6 +14,8 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { Card } from '../../components/Card';
 import { apiService } from '../../services/api';
+import { PressableScale } from '../../components/PressableScale';
+import { EmptyState } from '../../components/EmptyState';
 import { VoiceRecorder } from '../../components/VoiceRecorder';
 import { Card as BaseCard } from '../../components/Card';
 
@@ -36,6 +38,7 @@ export function UserDashboardScreen() {
     { id: 'live', title: 'Transmissões', icon: 'radio', color: colors.destructive },
     { id: 'prayers', title: 'Orações', icon: 'heart', color: colors.success },
     { id: 'donations', title: 'Doações', icon: 'card', color: colors.gold },
+    { id: 'checkin', title: 'Check-in QR', icon: 'qr-code', color: colors.primary },
   ];
 
   const load = async () => {
@@ -304,6 +307,15 @@ export function UserDashboardScreen() {
     },
   });
 
+  const onQuickAction = (id: string, navigation?: any) => {
+    switch (id) {
+      case 'checkin':
+        // @ts-ignore
+        (navigation as any)?.navigate?.('QRCheckin');
+        break;
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -327,6 +339,19 @@ export function UserDashboardScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
+        {/* Ações Rápidas com microinteração */}
+        <View style={styles.section}>
+          <View style={styles.quickActionsGrid}>
+            {/* @ts-ignore navigation is available via parent stack props in runtime */}
+            {quickActions.map((a) => (
+              <PressableScale key={a.id} style={styles.quickActionButton} onPress={() => onQuickAction(a.id, ({} as any))}>
+                <Ionicons name={a.icon as any} size={24} color={a.color} style={styles.quickActionIcon} />
+                <Text style={styles.quickActionText}>{a.title}</Text>
+              </PressableScale>
+            ))}
+          </View>
+        </View>
+
         {/* Notas por voz (transcrição rápida) */}
         <Card>
           <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.foreground, marginBottom: 8 }}>Nota Rápida por Voz</Text>

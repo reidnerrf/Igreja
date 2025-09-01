@@ -131,7 +131,7 @@ class ApiService {
   }
 
   async confirmAttendance(eventId: string) {
-    return this.request(`/events/${eventId}/attend`, {
+    return this.requestWithQueue(`/events/${eventId}/attend`, {
       method: 'POST',
     });
   }
