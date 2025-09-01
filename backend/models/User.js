@@ -38,15 +38,12 @@ const userSchema = new mongoose.Schema({
     default: null
   },
   
-  // Dados específicos do usuário
+  // Dados específicos do usuário (Exclusivamente Católico)
   city: {
     type: String,
     default: null
   },
-  denomination: {
-    type: String,
-    default: null
-  },
+  // Removido campo 'denomination' - app é exclusivamente católico
   ministry: {
     type: String,
     default: null

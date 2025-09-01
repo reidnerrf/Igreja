@@ -52,6 +52,14 @@ const devotionalsRoutes = require('./routes/devotionals');
 const chatRoutes = require('./routes/chat');
 const pixRoutes = require('./routes/pix');
 const eventsIcsRoutes = require('./routes/events-ics');
+
+// Novas rotas católicas
+const catholicOnboardingRoutes = require('./routes/catholic-onboarding');
+const churchBrandingRoutes = require('./routes/church-branding');
+const seasonalThemesRoutes = require('./routes/seasonal-themes');
+const gamificationExpandedRoutes = require('./routes/gamification-expanded');
+const quickNotificationsRoutes = require('./routes/quick-notifications');
+
 let premiumRoutes;
 try { premiumRoutes = require('./routes/premium'); } catch (_) { premiumRoutes = express.Router(); }
 
@@ -73,6 +81,13 @@ app.use('/api/devotionals', devotionalsRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/pix', pixRoutes);
 app.use('/api/events-ics', eventsIcsRoutes);
+
+// Novas rotas católicas
+app.use('/api/catholic-onboarding', catholicOnboardingRoutes);
+app.use('/api/church-branding', churchBrandingRoutes);
+app.use('/api/seasonal-themes', seasonalThemesRoutes);
+app.use('/api/gamification-expanded', gamificationExpandedRoutes);
+app.use('/api/quick-notifications', quickNotificationsRoutes);
 
 // Rota de health check
 app.get('/health', (req, res) => {
