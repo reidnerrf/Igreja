@@ -37,6 +37,21 @@ class ApiService {
     }
   }
 
+  // Offline queue wrapper for write operations
+  async requestWithQueue(endpoint: string, options: RequestInit = {}) {
+    try {
+      return await this.request(endpoint, options);
+    } catch (error) {
+      try {
+        const queueRaw = (await AsyncStorage.getItem('offline_queue')) || '[]';
+        const queue = JSON.parse(queueRaw);
+        queue.push({ endpoint, options, createdAt: Date.now() });
+        await AsyncStorage.setItem('offline_queue', JSON.stringify(queue));
+      } catch {}
+      throw error;
+    }
+  }
+
   // Auth
   async login(email: string, password: string, userType: 'church' | 'user') {
     return this.request('/auth/login', {
@@ -326,14 +341,14 @@ class ApiService {
   }
 
   async addPoints(points: number, type: string, context?: string) {
-    return this.request('/gamification/me/points', {
+    return this.requestWithQueue('/gamification/me/points', {
       method: 'POST',
       body: JSON.stringify({ points, type, context }),
     });
   }
 
   async addBadge(id: string, name: string, icon?: string) {
-    return this.request('/gamification/me/badges', {
+    return this.requestWithQueue('/gamification/me/badges', {
       method: 'POST',
       body: JSON.stringify({ id, name, icon }),
     });

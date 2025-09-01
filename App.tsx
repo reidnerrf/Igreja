@@ -10,10 +10,12 @@ import { LoginScreen } from './src/screens/LoginScreen';
 import { ChurchRootNavigator } from './src/navigation/ChurchRootNavigator';
 import { UserRootNavigator } from './src/navigation/UserRootNavigator';
 import { LoadingScreen } from './src/screens/LoadingScreen';
+import { useOfflineSync } from './src/hooks/useOfflineSync';
 
 const Stack = createStackNavigator();
 
 export default function App() {
+  useOfflineSync();
   const [isLoading, setIsLoading] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);

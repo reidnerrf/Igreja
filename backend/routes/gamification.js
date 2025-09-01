@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const { Expo } = require('expo-server-sdk');
+const expo = new Expo();
 const { authenticateToken } = require('../middleware/auth');
 const User = require('../models/User');
 
@@ -41,6 +43,23 @@ router.post('/me/badges', authenticateToken, async (req, res) => {
     if (!already) {
       user.gamification.badges.push({ id, name, icon, earnedAt: new Date() });
       await user.save();
+
+      // Enviar push se usuário tiver expoPushToken válido
+      if (user.expoPushToken && Expo.isExpoPushToken(user.expoPushToken)) {
+        try {
+          await expo.sendPushNotificationsAsync([
+            {
+              to: user.expoPushToken,
+              sound: 'default',
+              title: '🏅 Nova conquista!',
+              body: `Você desbloqueou: ${name}`,
+              data: { type: 'badge_unlocked', badgeId: id, name },
+            },
+          ]);
+        } catch (e) {
+          console.error('Erro push badge:', e);
+        }
+      }
     }
     res.json({ success: true, gamification: user.gamification });
   } catch (error) {
