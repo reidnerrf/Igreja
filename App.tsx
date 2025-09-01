@@ -45,7 +45,7 @@ export default function App() {
   };
 
   const handleLogin = async (type: 'church' | 'user') => {
-    await AsyncStorage.setItem('auth_token', 'demo_token');
+    // Do not overwrite token set by social login; just persist the user type
     await AsyncStorage.setItem('user_type', type);
     setIsAuthenticated(true);
     setUserType(type);
