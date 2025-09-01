@@ -1,6 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export const API_BASE_URL = __DEV__ ? 'http://localhost:3001/api' : 'https://your-api.com/api';
+// Vite/Expo web do not define __DEV__ at build-time the same way as React Native.
+// Prefer environment variable with sensible fallbacks for local dev.
+const isDev = (import.meta as any)?.env?.MODE === 'development' || (import.meta as any)?.env?.DEV || (globalThis as any)?.__DEV__;
+const envApiBase = (import.meta as any)?.env?.VITE_API_BASE_URL;
+export const API_BASE_URL = envApiBase || (isDev ? 'http://localhost:3001/api' : 'https://your-api.com/api');
 
 class ApiService {
   private async getAuthToken(): Promise<string | null> {
@@ -29,6 +33,21 @@ class ApiService {
       return await response.json();
     } catch (error) {
       console.error('API Error:', error);
+      throw error;
+    }
+  }
+
+  // Offline queue wrapper for write operations
+  async requestWithQueue(endpoint: string, options: RequestInit = {}) {
+    try {
+      return await this.request(endpoint, options);
+    } catch (error) {
+      try {
+        const queueRaw = (await AsyncStorage.getItem('offline_queue')) || '[]';
+        const queue = JSON.parse(queueRaw);
+        queue.push({ endpoint, options, createdAt: Date.now() });
+        await AsyncStorage.setItem('offline_queue', JSON.stringify(queue));
+      } catch {}
       throw error;
     }
   }
@@ -112,7 +131,7 @@ class ApiService {
   }
 
   async confirmAttendance(eventId: string) {
-    return this.request(`/events/${eventId}/attend`, {
+    return this.requestWithQueue(`/events/${eventId}/attend`, {
       method: 'POST',
     });
   }
@@ -314,6 +333,25 @@ class ApiService {
   // Analytics (Premium)
   async getAnalytics(type: 'church' | 'user', period: string) {
     return this.request(`/analytics/${type}?period=${period}`);
+  }
+
+  // Gamification
+  async getMyGamification() {
+    return this.request('/gamification/me');
+  }
+
+  async addPoints(points: number, type: string, context?: string) {
+    return this.requestWithQueue('/gamification/me/points', {
+      method: 'POST',
+      body: JSON.stringify({ points, type, context }),
+    });
+  }
+
+  async addBadge(id: string, name: string, icon?: string) {
+    return this.requestWithQueue('/gamification/me/badges', {
+      method: 'POST',
+      body: JSON.stringify({ id, name, icon }),
+    });
   }
 
   // Premium

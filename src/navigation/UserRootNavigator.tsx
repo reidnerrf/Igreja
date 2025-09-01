@@ -8,6 +8,9 @@ import { MyPostsScreen } from '../screens/user/MyPostsScreen';
 import { UserProfileScreen } from '../screens/user/UserProfileScreen';
 import { PrivacySettingsScreen } from '../screens/user/PrivacySettingsScreen';
 import { CommunityChatScreen } from '../screens/user/CommunityChatScreen';
+import { QRCheckinScreen } from '../screens/user/QRCheckinScreen';
+import { NotificationsInboxScreen } from '../screens/user/NotificationsInboxScreen';
+import { WidgetsCenterScreen } from '../screens/user/WidgetsCenterScreen';
 
 const Stack = createStackNavigator();
 
@@ -28,6 +31,9 @@ export function UserRootNavigator({ onLogout }: UserRootNavigatorProps) {
       <Stack.Screen name="UserProfile" component={UserProfileScreen} />
       <Stack.Screen name="PrivacySettings" component={PrivacySettingsScreen} />
       <Stack.Screen name="CommunityChat" component={CommunityChatScreen} />
+      <Stack.Screen name="QRCheckin" component={QRCheckinScreen} />
+      <Stack.Screen name="NotificationsInbox" component={NotificationsInboxScreen} />
+      <Stack.Screen name="WidgetsCenter" component={WidgetsCenterScreen} />
     </Stack.Navigator>
   );
 }
